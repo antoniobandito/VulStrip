@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vulstrip"
+version = "0.1.0"
+description = "Defensive, evidence-grounded vulnerability analysis harness"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.7,<3", "pyyaml>=6.0,<7", "typer>=0.12,<1"]
+
+[project.scripts]
+vulstrip = "harness.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["harness*"]
+namespaces = false

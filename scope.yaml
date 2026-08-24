@@ -1,0 +1,9 @@
+engagement_id: internal-lab-001
+authorized_assets:
+  - "*.example.test"
+  - "192.0.2.0/24"
+allowed_actions:
+  - passive_analysis
+  - report_generation
+active_validation: false
+data_classification: confidential

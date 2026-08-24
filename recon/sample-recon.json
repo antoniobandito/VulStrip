@@ -1,0 +1,11 @@
+[
+  {
+    "host": "app.example.test",
+    "port": 443,
+    "protocol": "tcp",
+    "service": "https",
+    "title": "TLS service detected",
+    "description": "Scanner observed an HTTPS service",
+    "tags": ["tls"]
+  }
+]
