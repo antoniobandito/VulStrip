@@ -5,6 +5,7 @@ import json
 import typer
 import yaml
 
+from harness.parsers.subfinder import SubfinderParser
 from harness.parsers.nikto import NiktoParser
 from harness.models.finding import Evidence, Finding
 from harness.parsers.nmap_xml import NmapXMLParser
@@ -94,6 +95,10 @@ def parse_input(path: Path) -> list[Finding]:
     nikto_parser = NiktoParser()
     if nikto_parser.can_parse(path, content):
         return nikto_parser.parse(path, content)
+    
+    subfinder_parser = SubfinderParser()
+    if subfinder_parser.can_parse(path, content):
+        return subfinder_parser.parse(path, content)
 
     if path.suffix.lower() == ".json":
         return parse_json(path, content)
