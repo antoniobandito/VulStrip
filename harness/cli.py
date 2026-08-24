@@ -5,6 +5,7 @@ import json
 import typer
 import yaml
 
+from harness.parsers.nikto import NiktoParser
 from harness.models.finding import Evidence, Finding
 from harness.parsers.nmap_xml import NmapXMLParser
 
@@ -87,9 +88,12 @@ def parse_input(path: Path) -> list[Finding]:
     content = path.read_text()
 
     nmap_parser = NmapXMLParser()
-
     if nmap_parser.can_parse(path, content):
         return nmap_parser.parse(path, content)
+
+    nikto_parser = NiktoParser()
+    if nikto_parser.can_parse(path, content):
+        return nikto_parser.parse(path, content)
 
     if path.suffix.lower() == ".json":
         return parse_json(path, content)
@@ -130,7 +134,7 @@ def ingest(
             path
             for path in input.rglob("*")
             if path.is_file()
-            and path.suffix.lower() in {".json", ".xml"}
+            and path.suffix.lower() in {".json", ".xml", ".txt", ".text", "log"}
         )
 
     if not paths:
