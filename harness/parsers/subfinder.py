@@ -3,6 +3,7 @@ import hashlib
 import json
 from typing import Any
 
+from harness.parsers.common import canonical_fingerprint
 from harness.models.finding import Evidence, Finding
 
 
@@ -55,7 +56,14 @@ class SubfinderParser:
 
             source = self._source_from_row(row)
             ip = self._ip_from_row(row)
-            fingerprint = self._fingerprint(host)
+            fingerprint = canonical_fingerprint(
+                asset=host,
+                asset_type="domain",
+                port=None,
+                protocol=None,
+                service=None,
+                title="Subdomain discovered",
+            )
             evidence_id = hashlib.sha256(
                 f"{path}:{index}:{raw_line}".encode()
             ).hexdigest()[:16]

@@ -1,0 +1,1 @@
+from harness.parsers.common import canonical_fingerprint

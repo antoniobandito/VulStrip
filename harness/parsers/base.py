@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Protocol
 
+from harness.parsers.common import canonical_fingerprint
 from harness.models.finding import Finding
 
 class ReconParser(Protocol):

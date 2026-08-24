@@ -2,6 +2,7 @@ from pathlib import Path
 import hashlib
 import xml.etree.ElementTree as ET
 
+from harness.parsers.common import canonical_fingerprint
 from harness.models.finding import Evidence, Finding
 
 
@@ -67,13 +68,14 @@ class NmapXMLParser:
                     encoding="unicode",
                 )
 
-                fingerprint_input = (
-                    f"{asset}|{protocol}|{port}|{service}|{state}|"
-                    f"{scripts}"
+                fingerprint = canonical_fingerprint(
+                    asset=asset,
+                    asset_type="host",
+                    port=port,
+                    protocol=protocol,
+                    service=service,
+                    title=f"Nmap service observation: {service or 'unknown'}",
                 )
-                fingerprint = hashlib.sha256(
-                    fingerprint_input.lower().encode()
-                ).hexdigest()[:16]
 
                 evidence_id = hashlib.sha256(
                     f"{path}:{asset}:{port}:{raw_fragment}".encode()

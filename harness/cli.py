@@ -5,6 +5,10 @@ import json
 import typer
 import yaml
 
+from harness.parsers.common import (
+    load_recon_files,
+    merge_findings,
+)
 from harness.parsers.subfinder import SubfinderParser
 from harness.parsers.nikto import NiktoParser
 from harness.models.finding import Evidence, Finding
@@ -133,7 +137,7 @@ def ingest(
         )
 
     if input.is_file():
-        paths = [input]
+        paths = load_recon_files(input)
     else:
         paths = sorted(
             path
@@ -144,23 +148,15 @@ def ingest(
 
     if not paths:
         raise typer.BadParameter(
-            f"No .json or .xml files found under: {input}"
+            f"No supported reconnaissance files found under : {input}"
         )
 
-    findings_by_fingerprint: dict[str, Finding] = {}
+    all_findings: list[Finding] = []
 
     for path in paths:
-        for finding in parse_input(path):
-            existing = findings_by_fingerprint.get(finding.fingerprint)
-
-            if existing is None:
-                findings_by_fingerprint[finding.fingerprint] = finding
-                continue
-
-            existing.evidence.extend(finding.evidence)
-            existing.source_tools = sorted(
-                set(existing.source_tools + finding.source_tools)
-            )
+        all_findings.extend(parse_input(path))
+    
+    findings = merge_findings(all_findings)
 
     payload = {
         "report_version": "1.0",
@@ -169,14 +165,14 @@ def ingest(
         "input_files": [str(path) for path in paths],
         "findings": [
             finding.model_dump(mode="json")
-            for finding in findings_by_fingerprint.values()
+            for finding in findings
         ],
     }
 
     output.write_text(json.dumps(payload, indent=2))
 
     typer.echo(
-        f"Wrote {len(findings_by_fingerprint)} findings to {output}"
+        f"Wrote {len(findings)} findings to {output}"
     )
 
 

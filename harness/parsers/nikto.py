@@ -4,6 +4,7 @@ import json
 import re
 from typing import Any
 
+from harness.parsers.common import canonical_fingerprint
 from harness.models.finding import Evidence, Finding
 
 
@@ -113,9 +114,28 @@ class NiktoParser:
         port = self._port_from_url(host, url)
         protocol = self._protocol(host, url)
         raw = json.dumps(row, sort_keys=True)
-        fingerprint = self._fingerprint(asset, port, method, message, url)
+        fingerprint = canonical_fingerprint(
+            asset=asset,
+            asset_type=(
+            "url"
+            if self._is_absolute_url(asset)
+            else "endpoint"
+        ),
+        port=port,
+        protocol=protocol,
+        service=(
+            "http"
+            if protocol == "http"
+            else "https"
+            if protocol == "https"
+            else None
+        ),
+        title=message,
+        path=url,
+        cve_ids=cve_ids,
+        )
         evidence_id = hashlib.sha256(
-            f"{path}:{index}:{raw}".encode()
+        f"{path}:{index}:{raw}".encode()
         ).hexdigest()[:16]
 
         return Finding(
@@ -197,8 +217,25 @@ class NiktoParser:
             asset = self._asset_from_host(host, url)
             port = self._port_from_url(host, url)
             protocol = self._protocol(host, url)
-            fingerprint = self._fingerprint(
-                asset, port, None, message, url
+            fingerprint = canonical_fingerprint(
+                asset=asset,
+                asset_type=(
+                    "url"
+                    if self._is_absolute_url(asset)
+                    else "endpoint"
+            ),
+            port=port,
+            protocol=protocol,
+            service=(
+                "http"
+                if protocol == "http"
+                else "https"
+                if protocol == "https"
+                else None
+            ),
+            title=message,
+            path=url,
+            cve_ids=cve_ids,
             )
             evidence_id = (
                 "e-"
