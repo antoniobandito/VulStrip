@@ -1,3 +1,10 @@
 pydantic<3,>=2.7
 pyyaml<7,>=6.0
 typer<1,>=0.12
+
+[dev]
+pytest<9,>=8
+pytest-asyncio<1,>=0.23
+
+[ollama]
+ollama>=0.5

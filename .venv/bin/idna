@@ -1,0 +1,8 @@
+#!/bin/sh
+'''exec' "/Users/casha/Desktop/DeepCut/AI-Powered Vulnerability Analysis Harness/VulStrip/.venv/bin/python3" "$0" "$@"
+' '''
+import sys
+from idna.cli import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())
