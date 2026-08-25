@@ -25,3 +25,34 @@ class Finding(BaseModel):
     tags: list[str] = Field(default_factory=list)
     source_tools: list[str] = Field(default_factory=list)
     fingerprint: str
+
+class ModelAssessment(BaseModel):
+    provider: str
+    model: str
+    finding_id: str
+    severity: Literal[
+        "informational",
+        "low",
+        "medium",
+        "high",
+        "critical",
+        "unknown",
+    ]
+    priority_score: float = Field(ge=0, le=100)
+    exploitability: Literal[
+        "unknown",
+        "unlikely",
+        "possible",
+        "probable",
+        "confirmed",
+    ]
+    exploitability_reason: str
+    impact: Literal["unknown", "low", "medium", "high", "critical"]
+    confidence: float = Field(ge=0, le=1)
+    recommended_actions: list[str] = Field(default_factory=list)
+    validation_steps: list[str] = Field(default_factory=list)
+    assumptions: list[str] = Field(default_factory=list)
+    cited_evidence: list[str] = Field(default_factory=list)
+    unsafe_or_unsupported_claims: list[str] = Field(default_factory=list)
+    raw_response_hash: str
+    prompt_version: str = "v1"

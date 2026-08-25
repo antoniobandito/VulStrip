@@ -16,3 +16,9 @@ vulstrip = "harness.cli:app"
 where = ["."]
 include = ["harness*"]
 namespaces = false
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+    "pytest-asyncio>=0.23,<1"
+]
