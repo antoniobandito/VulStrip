@@ -20,45 +20,7 @@
   ],
   "findings": [
     {
-      "finding_id": "f-a236dec354ab509b",
-      "asset": "192.0.2.10",
-      "asset_type": "host",
-      "port": 443,
-      "protocol": "tcp",
-      "service": "https",
-      "title": "Nmap service observation: https",
-      "description": "Nmap observed port 443/tcp in state open.",
-      "cve_ids": [],
-      "cwes": [],
-      "evidence": [
-        {
-          "evidence_id": "e-8ce19dd6ef56bbe1",
-          "source_tool": "nmap",
-          "source_file": "recon/sample-nmap.xml",
-          "raw_text": "<port protocol=\"tcp\" portid=\"443\">\n        <state state=\"open\" />\n        <service name=\"https\" product=\"Example HTTPS\" version=\"1.0\" />\n      </port>\n      ",
-          "structured_data": {
-            "port_state": "open",
-            "service": {
-              "name": "https",
-              "product": "Example HTTPS",
-              "version": "1.0"
-            },
-            "scripts": []
-          },
-          "observed_at": null
-        }
-      ],
-      "tags": [
-        "nmap",
-        "open"
-      ],
-      "source_tools": [
-        "nmap"
-      ],
-      "fingerprint": "a236dec354ab509b"
-    },
-    {
-      "finding_id": "f-8cf52d5e270dc878",
+      "finding_id": "f-2b08ca28a2515a62",
       "asset": "192.0.2.10",
       "asset_type": "host",
       "port": 22,
@@ -93,7 +55,45 @@
       "source_tools": [
         "nmap"
       ],
-      "fingerprint": "8cf52d5e270dc878"
+      "fingerprint": "2b08ca28a2515a62"
+    },
+    {
+      "finding_id": "f-7260724e4d0569b2",
+      "asset": "192.0.2.10",
+      "asset_type": "host",
+      "port": 443,
+      "protocol": "tcp",
+      "service": "https",
+      "title": "Nmap service observation: https",
+      "description": "Nmap observed port 443/tcp in state open.",
+      "cve_ids": [],
+      "cwes": [],
+      "evidence": [
+        {
+          "evidence_id": "e-8ce19dd6ef56bbe1",
+          "source_tool": "nmap",
+          "source_file": "recon/sample-nmap.xml",
+          "raw_text": "<port protocol=\"tcp\" portid=\"443\">\n        <state state=\"open\" />\n        <service name=\"https\" product=\"Example HTTPS\" version=\"1.0\" />\n      </port>\n      ",
+          "structured_data": {
+            "port_state": "open",
+            "service": {
+              "name": "https",
+              "product": "Example HTTPS",
+              "version": "1.0"
+            },
+            "scripts": []
+          },
+          "observed_at": null
+        }
+      ],
+      "tags": [
+        "nmap",
+        "open"
+      ],
+      "source_tools": [
+        "nmap"
+      ],
+      "fingerprint": "7260724e4d0569b2"
     },
     {
       "finding_id": "f-72a76b6efb5355be",
