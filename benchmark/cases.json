@@ -1,0 +1,42 @@
+[
+    {
+      "case_id": "service-detected-not-confirmed",
+      "input_finding": {
+        "finding_id": "f-benchmark-001",
+        "asset": "app.example.test",
+        "asset_type": "host",
+        "port": 22,
+        "protocol": "tcp",
+        "service": "ssh",
+        "title": "SSH service observed",
+        "description": "An SSH service was observed.",
+        "cve_ids": [],
+        "cwes": [],
+        "evidence": [
+          {
+            "evidence_id": "e-benchmark-001",
+            "source_tool": "nmap",
+            "source_file": "fixture.xml",
+            "raw_text": "<service name=\"ssh\" product=\"OpenSSH\" />",
+            "structured_data": {
+              "port_state": "open",
+              "service": {
+                "name": "ssh",
+                "product": "OpenSSH"
+              }
+            },
+            "observed_at": null
+          }
+        ],
+        "tags": ["benchmark"],
+        "source_tools": ["nmap"],
+        "fingerprint": "benchmark-001"
+      },
+      "expected": {
+        "severity": "unknown",
+        "acceptable_priority_range": [0, 50],
+        "expected_remediation_category": "inventory-and-configuration-review",
+        "requires_human_review": true
+      }
+    }
+  ]
