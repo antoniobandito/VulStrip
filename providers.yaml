@@ -1,0 +1,19 @@
+providers:
+  - id: mock-a
+    type: mock
+    model: mock-a
+    enabled: true
+    timeout_seconds: 10
+
+  - id: mock-b
+    type: mock
+    model: mock-b
+    enabled: true
+    timeout_seconds: 10
+
+  - id: ollama-qwen
+    type: ollama
+    model: qwen3
+    host: http://[ReplaceWithOllamaIP]:11434
+    enabled: false
+    timeout_seconds: 30

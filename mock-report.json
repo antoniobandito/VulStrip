@@ -1,0 +1,370 @@
+{
+  "report_version": "1.0",
+  "run_id": "de2664fa-5b52-4806-a0a3-b2d14c36d59a",
+  "created_at": "2026-08-25T17:23:23.223613+00:00",
+  "scope": {
+    "engagement_id": "internal-lab-001",
+    "authorized_assets": [
+      "*.example.test",
+      "192.0.2.0/24"
+    ],
+    "allowed_actions": [
+      "passive_analysis",
+      "report_generation"
+    ],
+    "active_validation": false,
+    "data_classification": "confidential"
+  },
+  "input_files": [
+    "recon/sample-nmap.xml",
+    "recon/sample-recon.json"
+  ],
+  "providers": [
+    "mock/mock-a",
+    "mock/mock-b"
+  ],
+  "findings": [
+    {
+      "finding": {
+        "finding_id": "f-2b08ca28a2515a62",
+        "asset": "192.0.2.10",
+        "asset_type": "host",
+        "port": 22,
+        "protocol": "tcp",
+        "service": "ssh",
+        "title": "Nmap service observation: ssh",
+        "description": "Nmap observed port 22/tcp in state open.",
+        "cve_ids": [],
+        "cwes": [],
+        "evidence": [
+          {
+            "evidence_id": "e-633a8cbff2da56fe",
+            "source_tool": "nmap",
+            "source_file": "recon/sample-nmap.xml",
+            "raw_text": "<port protocol=\"tcp\" portid=\"22\">\n        <state state=\"open\" />\n        <service name=\"ssh\" product=\"OpenSSH\" version=\"9.0\" />\n      </port>\n    ",
+            "structured_data": {
+              "port_state": "open",
+              "service": {
+                "name": "ssh",
+                "product": "OpenSSH",
+                "version": "9.0"
+              },
+              "scripts": []
+            },
+            "observed_at": null
+          }
+        ],
+        "tags": [
+          "nmap",
+          "open"
+        ],
+        "source_tools": [
+          "nmap"
+        ],
+        "fingerprint": "2b08ca28a2515a62"
+      },
+      "assessments": [
+        {
+          "provider": "mock",
+          "model": "mock-a",
+          "finding_id": "f-2b08ca28a2515a62",
+          "severity": "unknown",
+          "priority_score": 0.0,
+          "exploitability": "unknown",
+          "exploitability_reason": "Mock assessment does not infer exploitability.",
+          "impact": "unknown",
+          "confidence": 0.0,
+          "recommended_actions": [
+            "Review the supplied reconnaissance evidence manually."
+          ],
+          "validation_steps": [
+            "Confirm the observation using an authorized source."
+          ],
+          "assumptions": [],
+          "cited_evidence": [
+            "e-633a8cbff2da56fe"
+          ],
+          "unsafe_or_unsupported_claims": [],
+          "raw_response_hash": "756f6fc962c2ec7dd4da943225b533d23a8883821969aadba4d984ea99295591",
+          "prompt_version": "v1"
+        },
+        {
+          "provider": "mock",
+          "model": "mock-b",
+          "finding_id": "f-2b08ca28a2515a62",
+          "severity": "unknown",
+          "priority_score": 0.0,
+          "exploitability": "unknown",
+          "exploitability_reason": "Mock assessment does not infer exploitability.",
+          "impact": "unknown",
+          "confidence": 0.0,
+          "recommended_actions": [
+            "Review the supplied reconnaissance evidence manually."
+          ],
+          "validation_steps": [
+            "Confirm the observation using an authorized source."
+          ],
+          "assumptions": [],
+          "cited_evidence": [
+            "e-633a8cbff2da56fe"
+          ],
+          "unsafe_or_unsupported_claims": [],
+          "raw_response_hash": "756f6fc962c2ec7dd4da943225b533d23a8883821969aadba4d984ea99295591",
+          "prompt_version": "v1"
+        }
+      ],
+      "consensus": {
+        "assessment_count": 2,
+        "provider_count": 2,
+        "severity_values": [
+          "unknown"
+        ],
+        "median_priority_score": 0.0,
+        "priority_range": [
+          0.0,
+          0.0
+        ],
+        "median_confidence": 0.0,
+        "provider_agreement": 1.0,
+        "requires_human_review": false
+      },
+      "disagreements": [],
+      "evaluator_warnings": [],
+      "human_review": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": null
+      }
+    },
+    {
+      "finding": {
+        "finding_id": "f-7260724e4d0569b2",
+        "asset": "192.0.2.10",
+        "asset_type": "host",
+        "port": 443,
+        "protocol": "tcp",
+        "service": "https",
+        "title": "Nmap service observation: https",
+        "description": "Nmap observed port 443/tcp in state open.",
+        "cve_ids": [],
+        "cwes": [],
+        "evidence": [
+          {
+            "evidence_id": "e-8ce19dd6ef56bbe1",
+            "source_tool": "nmap",
+            "source_file": "recon/sample-nmap.xml",
+            "raw_text": "<port protocol=\"tcp\" portid=\"443\">\n        <state state=\"open\" />\n        <service name=\"https\" product=\"Example HTTPS\" version=\"1.0\" />\n      </port>\n      ",
+            "structured_data": {
+              "port_state": "open",
+              "service": {
+                "name": "https",
+                "product": "Example HTTPS",
+                "version": "1.0"
+              },
+              "scripts": []
+            },
+            "observed_at": null
+          }
+        ],
+        "tags": [
+          "nmap",
+          "open"
+        ],
+        "source_tools": [
+          "nmap"
+        ],
+        "fingerprint": "7260724e4d0569b2"
+      },
+      "assessments": [
+        {
+          "provider": "mock",
+          "model": "mock-a",
+          "finding_id": "f-7260724e4d0569b2",
+          "severity": "unknown",
+          "priority_score": 0.0,
+          "exploitability": "unknown",
+          "exploitability_reason": "Mock assessment does not infer exploitability.",
+          "impact": "unknown",
+          "confidence": 0.0,
+          "recommended_actions": [
+            "Review the supplied reconnaissance evidence manually."
+          ],
+          "validation_steps": [
+            "Confirm the observation using an authorized source."
+          ],
+          "assumptions": [],
+          "cited_evidence": [
+            "e-8ce19dd6ef56bbe1"
+          ],
+          "unsafe_or_unsupported_claims": [],
+          "raw_response_hash": "9da659e4809f33fcb1a5a22d652a63e9faeb388a9816d37b5b3b6b78e5ccdb21",
+          "prompt_version": "v1"
+        },
+        {
+          "provider": "mock",
+          "model": "mock-b",
+          "finding_id": "f-7260724e4d0569b2",
+          "severity": "unknown",
+          "priority_score": 0.0,
+          "exploitability": "unknown",
+          "exploitability_reason": "Mock assessment does not infer exploitability.",
+          "impact": "unknown",
+          "confidence": 0.0,
+          "recommended_actions": [
+            "Review the supplied reconnaissance evidence manually."
+          ],
+          "validation_steps": [
+            "Confirm the observation using an authorized source."
+          ],
+          "assumptions": [],
+          "cited_evidence": [
+            "e-8ce19dd6ef56bbe1"
+          ],
+          "unsafe_or_unsupported_claims": [],
+          "raw_response_hash": "9da659e4809f33fcb1a5a22d652a63e9faeb388a9816d37b5b3b6b78e5ccdb21",
+          "prompt_version": "v1"
+        }
+      ],
+      "consensus": {
+        "assessment_count": 2,
+        "provider_count": 2,
+        "severity_values": [
+          "unknown"
+        ],
+        "median_priority_score": 0.0,
+        "priority_range": [
+          0.0,
+          0.0
+        ],
+        "median_confidence": 0.0,
+        "provider_agreement": 1.0,
+        "requires_human_review": false
+      },
+      "disagreements": [],
+      "evaluator_warnings": [],
+      "human_review": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": null
+      }
+    },
+    {
+      "finding": {
+        "finding_id": "f-72a76b6efb5355be",
+        "asset": "app.example.test",
+        "asset_type": "unknown",
+        "port": 443,
+        "protocol": "tcp",
+        "service": "https",
+        "title": "TLS service detected",
+        "description": "Scanner observed an HTTPS service",
+        "cve_ids": [],
+        "cwes": [],
+        "evidence": [
+          {
+            "evidence_id": "e-788622fe6cf23bdd",
+            "source_tool": "generic_json",
+            "source_file": "recon/sample-recon.json",
+            "raw_text": "{\"description\": \"Scanner observed an HTTPS service\", \"host\": \"app.example.test\", \"port\": 443, \"protocol\": \"tcp\", \"service\": \"https\", \"tags\": [\"tls\"], \"title\": \"TLS service detected\"}",
+            "structured_data": {
+              "host": "app.example.test",
+              "port": 443,
+              "protocol": "tcp",
+              "service": "https",
+              "title": "TLS service detected",
+              "description": "Scanner observed an HTTPS service",
+              "tags": [
+                "tls"
+              ]
+            },
+            "observed_at": null
+          }
+        ],
+        "tags": [
+          "tls"
+        ],
+        "source_tools": [
+          "generic_json"
+        ],
+        "fingerprint": "72a76b6efb5355be"
+      },
+      "assessments": [
+        {
+          "provider": "mock",
+          "model": "mock-a",
+          "finding_id": "f-72a76b6efb5355be",
+          "severity": "unknown",
+          "priority_score": 0.0,
+          "exploitability": "unknown",
+          "exploitability_reason": "Mock assessment does not infer exploitability.",
+          "impact": "unknown",
+          "confidence": 0.0,
+          "recommended_actions": [
+            "Review the supplied reconnaissance evidence manually."
+          ],
+          "validation_steps": [
+            "Confirm the observation using an authorized source."
+          ],
+          "assumptions": [],
+          "cited_evidence": [
+            "e-788622fe6cf23bdd"
+          ],
+          "unsafe_or_unsupported_claims": [],
+          "raw_response_hash": "1d6518590566fdc3de273cbbc069c648aed282e102e96bb2667f35c4e4c1a654",
+          "prompt_version": "v1"
+        },
+        {
+          "provider": "mock",
+          "model": "mock-b",
+          "finding_id": "f-72a76b6efb5355be",
+          "severity": "unknown",
+          "priority_score": 0.0,
+          "exploitability": "unknown",
+          "exploitability_reason": "Mock assessment does not infer exploitability.",
+          "impact": "unknown",
+          "confidence": 0.0,
+          "recommended_actions": [
+            "Review the supplied reconnaissance evidence manually."
+          ],
+          "validation_steps": [
+            "Confirm the observation using an authorized source."
+          ],
+          "assumptions": [],
+          "cited_evidence": [
+            "e-788622fe6cf23bdd"
+          ],
+          "unsafe_or_unsupported_claims": [],
+          "raw_response_hash": "1d6518590566fdc3de273cbbc069c648aed282e102e96bb2667f35c4e4c1a654",
+          "prompt_version": "v1"
+        }
+      ],
+      "consensus": {
+        "assessment_count": 2,
+        "provider_count": 2,
+        "severity_values": [
+          "unknown"
+        ],
+        "median_priority_score": 0.0,
+        "priority_range": [
+          0.0,
+          0.0
+        ],
+        "median_confidence": 0.0,
+        "provider_agreement": 1.0,
+        "requires_human_review": false
+      },
+      "disagreements": [],
+      "evaluator_warnings": [],
+      "human_review": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": null
+      }
+    }
+  ],
+  "run_metrics": {
+    "finding_count": 3,
+    "assessment_count": 6,
+    "provider_failures": 0
+  }
+}

@@ -84,15 +84,35 @@ async def assess_with_providers(
     *,
     timeout_seconds: float = 10.0,
 ) -> list[ProviderResult]:
-    return list(
-        await asyncio.gather(
-            *(
-                assess_with_provider(
-                    finding,
-                    provider,
-                    timeout_seconds=timeout_seconds,
-                )
-                for provider in providers
+    results = await asyncio.gather(
+        *(
+            assess_with_provider(
+                finding,
+                provider,
+                timeout_seconds=timeout_seconds,
+            )
+            for provider in providers
+        ),
+        return_exceptions=True,
+    )
+
+    normalized: list[ProviderResult] = []
+
+    for provider, result in zip(providers, results):
+        metadata = provider.metadata
+
+        if isinstance(result, ProviderResult):
+            normalized.append(result)
+            continue
+
+        normalized.append(
+            ProviderResult(
+                provider=metadata.provider,
+                model=metadata.model,
+                assessment=None,
+                warnings=[],
+                error=f"Provider task failed: {result}",
             )
         )
-    )
+
+    return normalized
