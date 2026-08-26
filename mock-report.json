@@ -1,7 +1,7 @@
 {
   "report_version": "1.0",
-  "run_id": "de2664fa-5b52-4806-a0a3-b2d14c36d59a",
-  "created_at": "2026-08-25T17:23:23.223613+00:00",
+  "run_id": "11f4bcc6-b69f-4ac8-afbf-aeeb7b915a94",
+  "created_at": "2026-08-26T18:55:07.687236+00:00",
   "scope": {
     "engagement_id": "internal-lab-001",
     "authorized_assets": [
@@ -21,7 +21,7 @@
   ],
   "providers": [
     "mock/mock-a",
-    "mock/mock-b"
+    "ollama/qwen3"
   ],
   "findings": [
     {
@@ -87,34 +87,10 @@
           "unsafe_or_unsupported_claims": [],
           "raw_response_hash": "756f6fc962c2ec7dd4da943225b533d23a8883821969aadba4d984ea99295591",
           "prompt_version": "v1"
-        },
-        {
-          "provider": "mock",
-          "model": "mock-b",
-          "finding_id": "f-2b08ca28a2515a62",
-          "severity": "unknown",
-          "priority_score": 0.0,
-          "exploitability": "unknown",
-          "exploitability_reason": "Mock assessment does not infer exploitability.",
-          "impact": "unknown",
-          "confidence": 0.0,
-          "recommended_actions": [
-            "Review the supplied reconnaissance evidence manually."
-          ],
-          "validation_steps": [
-            "Confirm the observation using an authorized source."
-          ],
-          "assumptions": [],
-          "cited_evidence": [
-            "e-633a8cbff2da56fe"
-          ],
-          "unsafe_or_unsupported_claims": [],
-          "raw_response_hash": "756f6fc962c2ec7dd4da943225b533d23a8883821969aadba4d984ea99295591",
-          "prompt_version": "v1"
         }
       ],
       "consensus": {
-        "assessment_count": 2,
+        "assessment_count": 1,
         "provider_count": 2,
         "severity_values": [
           "unknown"
@@ -126,10 +102,12 @@
         ],
         "median_confidence": 0.0,
         "provider_agreement": 1.0,
-        "requires_human_review": false
+        "requires_human_review": true
       },
       "disagreements": [],
-      "evaluator_warnings": [],
+      "evaluator_warnings": [
+        "ollama/qwen3: Provider failed: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download"
+      ],
       "human_review": {
         "status": "pending",
         "reviewer": null,
@@ -199,34 +177,10 @@
           "unsafe_or_unsupported_claims": [],
           "raw_response_hash": "9da659e4809f33fcb1a5a22d652a63e9faeb388a9816d37b5b3b6b78e5ccdb21",
           "prompt_version": "v1"
-        },
-        {
-          "provider": "mock",
-          "model": "mock-b",
-          "finding_id": "f-7260724e4d0569b2",
-          "severity": "unknown",
-          "priority_score": 0.0,
-          "exploitability": "unknown",
-          "exploitability_reason": "Mock assessment does not infer exploitability.",
-          "impact": "unknown",
-          "confidence": 0.0,
-          "recommended_actions": [
-            "Review the supplied reconnaissance evidence manually."
-          ],
-          "validation_steps": [
-            "Confirm the observation using an authorized source."
-          ],
-          "assumptions": [],
-          "cited_evidence": [
-            "e-8ce19dd6ef56bbe1"
-          ],
-          "unsafe_or_unsupported_claims": [],
-          "raw_response_hash": "9da659e4809f33fcb1a5a22d652a63e9faeb388a9816d37b5b3b6b78e5ccdb21",
-          "prompt_version": "v1"
         }
       ],
       "consensus": {
-        "assessment_count": 2,
+        "assessment_count": 1,
         "provider_count": 2,
         "severity_values": [
           "unknown"
@@ -238,10 +192,12 @@
         ],
         "median_confidence": 0.0,
         "provider_agreement": 1.0,
-        "requires_human_review": false
+        "requires_human_review": true
       },
       "disagreements": [],
-      "evaluator_warnings": [],
+      "evaluator_warnings": [
+        "ollama/qwen3: Provider failed: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download"
+      ],
       "human_review": {
         "status": "pending",
         "reviewer": null,
@@ -312,34 +268,10 @@
           "unsafe_or_unsupported_claims": [],
           "raw_response_hash": "1d6518590566fdc3de273cbbc069c648aed282e102e96bb2667f35c4e4c1a654",
           "prompt_version": "v1"
-        },
-        {
-          "provider": "mock",
-          "model": "mock-b",
-          "finding_id": "f-72a76b6efb5355be",
-          "severity": "unknown",
-          "priority_score": 0.0,
-          "exploitability": "unknown",
-          "exploitability_reason": "Mock assessment does not infer exploitability.",
-          "impact": "unknown",
-          "confidence": 0.0,
-          "recommended_actions": [
-            "Review the supplied reconnaissance evidence manually."
-          ],
-          "validation_steps": [
-            "Confirm the observation using an authorized source."
-          ],
-          "assumptions": [],
-          "cited_evidence": [
-            "e-788622fe6cf23bdd"
-          ],
-          "unsafe_or_unsupported_claims": [],
-          "raw_response_hash": "1d6518590566fdc3de273cbbc069c648aed282e102e96bb2667f35c4e4c1a654",
-          "prompt_version": "v1"
         }
       ],
       "consensus": {
-        "assessment_count": 2,
+        "assessment_count": 1,
         "provider_count": 2,
         "severity_values": [
           "unknown"
@@ -351,10 +283,12 @@
         ],
         "median_confidence": 0.0,
         "provider_agreement": 1.0,
-        "requires_human_review": false
+        "requires_human_review": true
       },
       "disagreements": [],
-      "evaluator_warnings": [],
+      "evaluator_warnings": [
+        "ollama/qwen3: Provider failed: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download"
+      ],
       "human_review": {
         "status": "pending",
         "reviewer": null,
@@ -365,6 +299,6 @@
   "run_metrics": {
     "finding_count": 3,
     "assessment_count": 6,
-    "provider_failures": 0
+    "provider_failures": 3
   }
 }
