@@ -76,3 +76,17 @@ def evaluate_assessment(
             else True
         ),
     }
+
+def unsupported_claim_rate(
+    assessment: dict[str, Any],
+) -> float:
+    claims = assessment.get("claims", [])
+    unsupported = assessment.get(
+        "unsafe_or_unsupported_claims",
+        [],
+    )
+
+    if not claims:
+        return 0.0
+
+    return len(unsupported) / len(claims)

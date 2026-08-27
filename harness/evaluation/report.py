@@ -7,6 +7,7 @@ import hashlib
 import json
 import uuid
 
+from harness.evaluation.metrics import evidence_coverage
 from harness.evaluation.orchestrator import ProviderResult
 from harness.models.finding import Finding
 
@@ -36,6 +37,20 @@ def build_finding_report(
     priorities = [item["priority_score"] for item in assessments]
     confidences = [item["confidence"] for item in assessments]
 
+    valid_evidence_ids = {
+    evidence.evidence_id
+    for evidence in finding.evidence
+    }
+
+    coverage_values = [
+    evidence_coverage(
+        item["cited_evidence"],
+        valid_evidence_ids,
+        )
+    for item in assessments
+    ]
+
+
     consensus: dict[str, Any] = {
         "assessment_count": len(assessments),
         "provider_count": len(results),
@@ -43,6 +58,11 @@ def build_finding_report(
         "median_priority_score": median(priorities) if priorities else None,
         "priority_range": [min(priorities), max(priorities)] if priorities else [],
         "median_confidence": median(confidences) if confidences else None,
+        "evidence_coverage": (
+            sum(coverage_values) / len(coverage_values)
+            if coverage_values
+            else 0.0
+        ),
         "provider_agreement": _agreement(severities),
         "requires_human_review": (
             len(set(severities)) > 1

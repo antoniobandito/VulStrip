@@ -4,6 +4,9 @@ from harness.evaluation.orchestrator import assess_with_providers
 from harness.evaluation.report import build_finding_report, build_report
 from harness.models.finding import Evidence, Finding
 from harness.providers.mock import MockProvider
+from harness.models.finding import ModelAssessment
+from harness.providers.base import ProviderMetadata
+
 
 
 def make_finding() -> Finding:
@@ -96,3 +99,52 @@ async def test_unknown_mock_assessments_require_human_review():
     report = build_finding_report(finding, results)
 
     assert report["consensus"]["requires_human_review"] is True
+
+class FixedProvider:
+    def __init__(self, model: str, severity: str, priority: float):
+        self.metadata = ProviderMetadata(
+            provider="test",
+            model=model,
+            prompt_version="v1",
+        )
+        self.severity = severity
+        self.priority = priority
+
+    async def assess(self, finding, system_prompt, user_prompt):
+        return ModelAssessment(
+            provider="test",
+            model=self.metadata.model,
+            finding_id=finding.finding_id,
+            severity=self.severity,
+            priority_score=self.priority,
+            exploitability="unknown",
+            exploitability_reason="Fixture assessment only.",
+            impact="unknown",
+            confidence=0.5,
+            recommended_actions=["Review the finding."],
+            validation_steps=["Confirm with an authorized source."],
+            assumptions=[],
+            cited_evidence=[item.evidence_id for item in finding.evidence],
+            unsafe_or_unsupported_claims=[],
+            raw_response_hash="fixture-hash",
+            prompt_version="v1",
+        )
+
+
+@pytest.mark.asyncio
+async def test_report_surfaces_provider_disagreement():
+    finding = make_finding()
+    results = await assess_with_providers(
+        finding,
+        [
+            FixedProvider("low-model", "low", 25),
+            FixedProvider("high-model", "high", 85),
+        ],
+    )
+
+    report = build_finding_report(finding, results)
+
+    assert report["consensus"]["provider_agreement"] == 0.5
+    assert report["consensus"]["priority_range"] == [25, 85]
+    assert report["consensus"]["requires_human_review"] is True
+    assert report["disagreements"]

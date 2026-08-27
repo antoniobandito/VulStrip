@@ -1,0 +1,12 @@
+assets:
+  app.example.test:
+    criticality: high
+    internet_exposed: true
+    authentication_required: true
+    data_sensitivity: confidential
+
+  192.0.2.10:
+    criticality: medium
+    internet_exposed: false
+    authentication_required: true
+    data_sensitivity: internal
