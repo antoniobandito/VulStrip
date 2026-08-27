@@ -4,8 +4,13 @@ import json
 import re
 from typing import Any
 
-from harness.parsers.common import canonical_fingerprint
-from harness.models.finding import Evidence, Finding
+from harness.parsers.common import (
+    canonical_fingerprint,
+    normalize_severity,
+    parse_cwe,
+)
+
+from harness.models.finding import Finding
 
 
 class NiktoParser:
@@ -140,20 +145,20 @@ class NiktoParser:
 
         return Finding(
             finding_id=f"f-{fingerprint}",
-            asset=asset,
-            asset_type=(
-                "url"
-                if self._is_absolute_url(asset)
-                else "endpoint"
+            asset_id =asset,
+            scanner=self.tool_name,
+            raw_severity=str(
+                row.get("severity")
+                or row.get("risk")
+                or "unknown"
             ),
-            port=port,
-            protocol=protocol,
-            service=(
-                "http"
-                if protocol == "http"
-                else "https"
-                if protocol == "https"
-                else None
+            normalized_severity=normalize_severity(
+                row.get("severity") or row.get("risk")
+            ),
+            cwe_ids=parse_cwe(
+                row.get("cwe")
+                or row.get("cwe_ids")
+                or []
             ),
             title=message[:160],
             description=message,
@@ -161,20 +166,20 @@ class NiktoParser:
             tags=["nikto", "scanner_observation"],
             source_tools=[self.tool_name],
             fingerprint=fingerprint,
-            evidence=[
-                Evidence(
-                    evidence_id=f"e-{evidence_id}",
-                    source_tool=self.tool_name,
-                    source_file=str(path),
-                    raw_text=raw,
-                    structured_data={
-                        "url": url or None,
-                        "method": method,
-                        "osvdb": osvdb,
-                    },
-                )
-            ],
-        )
+            evidence={
+                    "evidence_id": f"e-{evidence_id}",
+                    "source_file": str(path),
+                    "raw": row,
+                    "url": url or None,
+                    "method": method,
+                    "osvdb": osvdb,
+                },
+                references=[
+                    f"https://cve.mitre.org/cgi-bin/cvename.cgi?name={cve}"
+                    for cve in cve_ids
+                ],
+            )
+        
 
     def _parse_text(self, path: Path, content: str) -> list[Finding]:
         host = self._text_host(content)
@@ -247,42 +252,27 @@ class NiktoParser:
             findings.append(
                 Finding(
                     finding_id=f"f-{fingerprint}",
-                    asset=asset,
-                    asset_type=(
-                        "url"
-                        if self._is_absolute_url(asset)
-                        else "endpoint"
-                    ),
-                    port=port,
-                    protocol=protocol,
-                    service=(
-                        "http"
-                        if protocol == "http"
-                        else "https"
-                        if protocol == "https"
-                        else None
-                    ),
+                    asset_id=asset,
+                    scanner=self.tool_name,
+                    raw_severity="unknown",
+                    normalized_severity=normalize_severity(None),
+                    cwe_ids=[],
                     title=message[:160],
                     description=message,
-                    cve_ids=cve_ids,
-                    tags=["nikto", "scanner_observation"],
-                    source_tools=[self.tool_name],
-                    fingerprint=fingerprint,
-                    evidence=[
-                        Evidence(
-                            evidence_id=evidence_id,
-                            source_tool=self.tool_name,
-                            source_file=str(path),
-                            raw_text=line,
-                            structured_data={
-                                "osvdb": (
-                                    osvdb_match.group(1)
-                                    if osvdb_match
-                                    else None
-                                ),
-                                "url": url or None,
-                            },
-                        )
+                    evidence={
+                        "evidence_id": evidence_id,
+                        "source_file": str(path),
+                        "raw_text": line,
+                        "osvdb": (
+                            osvdb_match.group(1)
+                            if osvdb_match
+                            else None
+                        ),
+                        "url": url or None,
+                    },
+                    references=[
+                        f"https://cve.mitre.org/cgi-bin/cvename.cgi?name={cve}"
+                        for cve in cve_ids
                     ],
                 )
             )
@@ -380,3 +370,12 @@ class NiktoParser:
     ) -> str:
         value = f"{asset}|{port}|{method}|{url}|{message}".lower()
         return hashlib.sha256(value.encode()).hexdigest()[:16]
+
+    def parse_nikto_json(
+        records: list[dict[str, Any]] | dict[str, Any],
+    ) -> list[Finding]:
+        parser = NiktoParser()
+
+        content = json.dumps(records)
+
+        return parser.parse(Path("nikto.json"), content)

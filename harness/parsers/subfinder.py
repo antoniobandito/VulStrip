@@ -3,8 +3,11 @@ import hashlib
 import json
 from typing import Any
 
-from harness.parsers.common import canonical_fingerprint
-from harness.models.finding import Evidence, Finding
+from harness.models.finding import Finding
+from harness.parsers.common import (
+    canonical_fingerprint,
+    normalize_severity,
+)
 
 
 class SubfinderParser:
@@ -71,28 +74,23 @@ class SubfinderParser:
             findings.append(
                 Finding(
                     finding_id=f"f-{fingerprint}",
-                    asset=host,
-                    asset_type="domain",
+                    asset_id=host,
+                    scanner=self.tool_name,
+                    raw_severity="info",
+                    normalized_severity=normalize_severity("info"),
+                    cwe_ids=[],
                     title="Subdomain discovered",
                     description=(
                         f"Subfinder reported the hostname {host}."
                     ),
-                    tags=["subfinder", "passive_discovery"],
-                    source_tools=[self.tool_name],
-                    fingerprint=fingerprint,
-                    evidence=[
-                        Evidence(
-                            evidence_id=f"e-{evidence_id}",
-                            source_tool=self.tool_name,
-                            source_file=str(path),
-                            raw_text=raw_line,
-                            structured_data={
-                                "host": host,
-                                "source": source,
-                                "ip": ip,
-                            },
-                        )
-                    ],
+                    evidence={
+                        "evidence_id": f"e-{evidence_id}",
+                        "source_file": str(path),
+                        "raw_text": raw_line,
+                        "host": host,
+                        "source": source,
+                        "ip": ip,
+                    },
                 )
             )
 
@@ -122,3 +120,17 @@ class SubfinderParser:
     @staticmethod
     def _fingerprint(host: str) -> str:
         return hashlib.sha256(host.encode()).hexdigest()[:16]
+    
+    def parse_subfinder_jsonl(
+        lines: list[str] | str,
+    ) -> list[Finding]:
+        content = (
+            "\n".join(lines)
+            if isinstance(lines, list)
+            else lines
+        )
+
+        return SubfinderParser().parse(
+            Path("subfinder.jsonl"),
+            content,
+        )

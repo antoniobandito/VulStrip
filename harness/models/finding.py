@@ -5,7 +5,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+import re
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class FindingStatus(str, Enum):
@@ -46,6 +47,10 @@ class Finding(BaseModel):
     All fields are designed to be scanner-agnostic and suitable for
     normalization, deduplication, and downstream AI analysis.
     """
+    model_config = ConfigDict(
+        use_enum_values=True,
+        validate_assignment=True,
+    )
 
     # Identity & asset linkage
     finding_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique identifier for this finding")
@@ -79,37 +84,47 @@ class Finding(BaseModel):
 
     @field_validator("cwe_ids")
     @classmethod
-    def validate_cwe_ids(cls, v: List[str]) -> List[str]:
-        cleaned = []
-        for cwe in v:
-            if not cwe:
+    def validate_cwe_ids(cls, values: list[str]) -> list[str]:
+        normalized: list[str] = []
+
+        for value in values:
+            if not isinstance(value, str):
                 continue
-            if not cwe.upper().startswith("CWE-"):
-                cleaned.append(f"CWE-{cwe}")
-            else:
-                cleaned.append(cwe.upper())
-        return cleaned
+
+            match = re.fullmatch(
+                r"(?:CWE-)?(\d+)",
+                value.strip(),
+                re.IGNORECASE,
+            )
+
+            if match:
+                normalized.append(f"CWE-{match.group(1)}")
+
+        return normalized
 
     @model_validator(mode="after")
     def ensure_consistent_severity(self) -> "Finding":
-        # If raw_severity is present but normalized_severity is UNKNOWN,
-        # attempt a simple heuristic mapping.
-        if self.raw_severity and self.normalized_severity == SeverityLevel.UNKNOWN:
-            raw = self.raw_severity.lower()
+        if (
+            self.raw_severity
+            and self.normalized_severity == SeverityLevel.UNKNOWN.value
+        ):
+            raw = self.raw_severity.strip().lower()
+
             mapping = {
-                "critical": SeverityLevel.CRITICAL,
-                "high": SeverityLevel.HIGH,
-                "medium": SeverityLevel.MEDIUM,
-                "low": SeverityLevel.LOW,
-                "info": SeverityLevel.INFO,
-                "informational": SeverityLevel.INFO,
+                "critical": SeverityLevel.CRITICAL.value,
+                "high": SeverityLevel.HIGH.value,
+                "medium": SeverityLevel.MEDIUM.value,
+                "low": SeverityLevel.LOW.value,
+                "info": SeverityLevel.INFO.value,
+                "informational": SeverityLevel.INFO.value,
             }
-            self.normalized_severity = mapping.get(raw, SeverityLevel.UNKNOWN)
+
+            self.normalized_severity = mapping.get(
+                raw,
+                SeverityLevel.UNKNOWN.value,
+            )
+
         return self
-
-    class Config:
-        use_enum_values = True
-
 
 def upgrade_legacy_finding(legacy: Dict[str, Any]) -> Finding:
     """

@@ -16,4 +16,18 @@ pip install -e .
 vulstrip ingest --input ./recon --scope ./scope.yaml --output ./normalized-findings.json
 ```
 
-The first milestone intentionally performs no active scanning, exploitation, shell execution, or model calls.
+## Parsers
+
+VulStrip includes parsers for:
+
+- **Nikto** (`harness/parsers/nikto.py`): Consumes Nikto JSON output and emits `Finding` objects with:
+
+  - `asset_id`: from `host`/`site`
+  - `scanner`: `"nikto"`
+  - `normalized_severity`: via `normalize_severity()`
+  - `cwe_ids`: via `parse_cwe()`
+
+- **Nmap XML** (`harness/parsers/nmap_xml.py`): Parses Nmap XML and emits findings per open port/service.
+- **Subfinder** (`harness/parsers/subfinder.py`): Consumes JSONL lines with `host` and optional `severity`.
+
+All parsers emit canonical `Finding` models defined in `harness/models/finding.py`.

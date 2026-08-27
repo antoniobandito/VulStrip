@@ -2,8 +2,11 @@ from pathlib import Path
 import hashlib
 import xml.etree.ElementTree as ET
 
-from harness.parsers.common import canonical_fingerprint
-from harness.models.finding import Evidence, Finding
+from harness.models.finding import Finding
+from harness.parsers.common import (
+    canonical_fingerprint,
+    normalize_severity,
+)
 
 
 class NmapXMLParser:
@@ -84,29 +87,32 @@ class NmapXMLParser:
                 findings.append(
                     Finding(
                         finding_id=f"f-{fingerprint}",
-                        asset=asset,
-                        asset_type="host",
-                        port=port,
-                        protocol=protocol,
-                        service=service,
+                        asset_id=asset,
+                        scanner=self.tool_name,
+                        raw_severity="info",
+                        normalized_severity=normalize_severity("info"),
+                        cwe_ids=[],
                         title=title,
                         description=(
                             f"Nmap observed port {port}/{protocol} "
                             f"in state {state}."
                         ),
-                        tags=["nmap", state],
-                        source_tools=[self.tool_name],
-                        fingerprint=fingerprint,
-                        evidence=[
-                            Evidence(
-                                evidence_id=f"e-{evidence_id}",
-                                source_tool=self.tool_name,
-                                source_file=str(path),
-                                raw_text=raw_fragment,
-                                structured_data=observed,
-                            )
-                        ],
+                        evidence={
+                            "evidence_id": f"e-{evidence_id}",
+                            "source_file": str(path),
+                            "raw_fragment": raw_fragment,
+                            "observed": observed,
+                            "port": port,
+                            "protocol": protocol,
+                            "service": service,
+                        },
                     )
                 )
+            return findings
+        
+        def parse_nmap_xml(content: str) -> list[Finding]:
+            return NmapXMLParser().parse(Path("nmap.xml"), content)
 
-        return findings
+       
+    
+    
