@@ -5,6 +5,11 @@ import json
 import typer
 import yaml
 
+from harness.evaluation.benchmark import (
+    evaluate_report,
+    load_benchmark_cases,
+)
+
 from harness.parsers.common import (
     load_recon_files,
     merge_findings,
@@ -173,6 +178,35 @@ def ingest(
 
     typer.echo(
         f"Wrote {len(findings)} findings to {output}"
+    )
+
+@app.command()
+def evaluate(
+        report: Path = typer.Option(..., "--report"),
+        benchmark: Path = typer.Option(..., "--benchmark"),
+        output: Path = typer.Option(..., "--output"),
+):
+    """Evaluate provider assessments against labeled benchmark cases."""
+
+    if not report.exists():
+        raise typer.BadParameter(
+            f"Report file does not exist: {report}"
+        )
+
+    if not benchmark.exists():
+        raise typer.BadParameter(
+            f"Benchmark file does not exist: {benchmark}"
+        )
+
+    report_data = json.loads(report.read_text())
+    benchmark_cases = load_benchmark_cases(benchmark)
+    evaluation = evaluate_report(report_data, benchmark_cases)
+
+    output.write_text(json.dumps(evaluation, indent=2))
+
+    typer.echo(
+        "Wrote evaluation for "
+        f"{evaluation['matched_case_count']} benchmark cases to {output}"
     )
 
 
