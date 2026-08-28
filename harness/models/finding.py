@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -75,8 +75,10 @@ class Finding(BaseModel):
     references: List[str] = Field(default_factory=list, description="URLs or IDs to external references (CVE, advisories, etc.)")
 
     # Lifecycle
-    first_seen: datetime = Field(default_factory=datetime.utcnow, description="First time this finding was observed")
-    last_seen: datetime = Field(default_factory=datetime.utcnow, description="Last time this finding was observed/updated")
+    first_seen: datetime = Field(default_factory=lambda: datetime.now(timezone.utc),
+                                 description="First time this finding was observed")
+    last_seen: datetime = Field(default_factory=lambda: datetime.now(timezone.utc),
+                                description="Last time this finding was observed/updated")
     status: FindingStatus = Field(FindingStatus.OPEN, description="Current lifecycle status")
 
     # Free-form metadata for future extension
@@ -119,11 +121,11 @@ class Finding(BaseModel):
                 "informational": SeverityLevel.INFO.value,
             }
 
-            self.normalized_severity = mapping.get(
-                raw,
-                SeverityLevel.UNKNOWN.value,
-            )
+            value = mapping.get(raw, SeverityLevel.UNKNOWN.value)
 
+            # Bypass pydantic validation to avoid recursion
+            object.__setattr__(self, "normalized_severity", value)
+            
         return self
 
 def upgrade_legacy_finding(legacy: Dict[str, Any]) -> Finding:

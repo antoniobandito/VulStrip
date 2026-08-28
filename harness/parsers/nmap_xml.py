@@ -110,8 +110,13 @@ class NmapXMLParser:
                 )
             return findings
         
-        def parse_nmap_xml(content: str) -> list[Finding]:
-            return NmapXMLParser().parse(Path("nmap.xml"), content)
+def parse_nmap_xml(content: str) -> list["Finding"]:
+    """
+    Convenience wrapper for tests: parse Nmap XML content into Findings.
+    """
+    from pathlib import Path
+
+    return NmapXMLParser().parse(Path("nmap.xml"), content)
 
        
     

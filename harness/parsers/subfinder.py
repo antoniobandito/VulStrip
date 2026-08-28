@@ -59,6 +59,10 @@ class SubfinderParser:
 
             source = self._source_from_row(row)
             ip = self._ip_from_row(row)
+
+            # Use row here, inside the loop
+            raw_sev = row.get("severity") or row.get("risk") or "info"
+            
             fingerprint = canonical_fingerprint(
                 asset=host,
                 asset_type="domain",
@@ -76,8 +80,8 @@ class SubfinderParser:
                     finding_id=f"f-{fingerprint}",
                     asset_id=host,
                     scanner=self.tool_name,
-                    raw_severity="info",
-                    normalized_severity=normalize_severity("info"),
+                    raw_severity=raw_sev,
+                    normalized_severity=normalize_severity(raw_sev),
                     cwe_ids=[],
                     title="Subdomain discovered",
                     description=(
@@ -121,16 +125,17 @@ class SubfinderParser:
     def _fingerprint(host: str) -> str:
         return hashlib.sha256(host.encode()).hexdigest()[:16]
     
-    def parse_subfinder_jsonl(
-        lines: list[str] | str,
-    ) -> list[Finding]:
-        content = (
-            "\n".join(lines)
-            if isinstance(lines, list)
-            else lines
-        )
+  
 
-        return SubfinderParser().parse(
-            Path("subfinder.jsonl"),
-            content,
-        )
+def parse_subfinder_jsonl(
+    lines: list[str] | str,
+) -> list["Finding"]:
+    """
+    Convenience wrapper for tests: parse Subfinder JSONL into Findings.
+
+    Accepts either a list of lines or a single JSONL string.
+    """
+    from pathlib import Path
+
+    content = "\n".join(lines) if isinstance(lines, list) else lines
+    return SubfinderParser().parse(Path("subfinder.jsonl"), content)

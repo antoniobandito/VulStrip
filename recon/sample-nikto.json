@@ -1,0 +1,14 @@
+[
+    {
+      "host": "example.com",
+      "msg": "Missing X-Frame-Options header",
+      "url": "https://example.com/",
+      "severity": "Medium"
+    },
+    {
+      "host": "example.com",
+      "msg": "Directory indexing enabled",
+      "url": "https://example.com/files/",
+      "severity": "Low"
+    }
+  ]

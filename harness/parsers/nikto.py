@@ -379,3 +379,19 @@ class NiktoParser:
         content = json.dumps(records)
 
         return parser.parse(Path("nikto.json"), content)
+    
+    
+def parse_nikto_json(
+        records: list[dict] | dict,
+    ) -> list["Finding"]:
+        """
+        Convenience wrapper for tests: parse Nikto JSON data into Findings.
+
+        Accepts either a list of finding dicts or a single dict.
+        """
+        import json
+        from pathlib import Path
+
+        parser = NiktoParser()
+        content = json.dumps(records)
+        return parser.parse(Path("nikto.json"), content)
