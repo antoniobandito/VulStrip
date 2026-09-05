@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from harness.models.finding import Evidence, Finding
+from harness.models.finding import Finding, Evidence
 from harness.providers.mock import MockProvider
 from harness.evaluation.orchestrator import (
     assess_with_provider,
@@ -13,15 +13,15 @@ from harness.evaluation.orchestrator import (
 def make_finding() -> Finding:
     return Finding(
         finding_id="f-test",
-        asset="app.example.test",
-        asset_type="domain",
+        asset_id="app.example.test",
+        scanner="test",
         title="Example scanner observation",
-        fingerprint="fingerprint-test",
+        description="Example scanner observation",
         evidence=[
             Evidence(
                 evidence_id="e-test",
                 source_tool="test",
-                raw_text="Observed by test fixture",
+                raw_text="Evidence fixture",
             )
         ],
     )

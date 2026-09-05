@@ -1,0 +1,1209 @@
+...FF.....FF.FFF......FFF.......FFFFFFFFF..FF..FFFFFF...                 [100%]
+=================================== FAILURES ===================================
+______________ test_merge_findings_combines_sources_and_evidence _______________
+
+    def test_merge_findings_combines_sources_and_evidence():
+        fingerprint = "same-finding"
+>       first = make_finding(
+            asset="example.test",
+            title="Observation",
+            source_tool="nmap",
+            evidence_id="e-nmap",
+            fingerprint=fingerprint,
+        )
+
+tests/test_common.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+asset = 'example.test', title = 'Observation', source_tool = 'nmap'
+evidence_id = 'e-nmap', fingerprint = 'same-finding'
+
+    def make_finding(
+        *,
+        asset: str,
+        title: str,
+        source_tool: str,
+        evidence_id: str,
+        fingerprint: str,
+    ) -> Finding:
+        return Finding(
+            finding_id=f"f-{fingerprint}",
+            asset=asset,
+            asset_type="domain",
+            title=title,
+            source_tools=[source_tool],
+            fingerprint=fingerprint,
+            evidence=[
+>               Evidence(
+                ^^^^^^^^
+                    evidence_id=evidence_id,
+                    source_tool=source_tool,
+                    source_file=f"{source_tool}.json",
+                    raw_text=asset,
+                )
+            ],
+        )
+E       NameError: name 'Evidence' is not defined
+
+tests/test_common.py:29: NameError
+_______________ test_merge_findings_does_not_duplicate_evidence ________________
+
+    def test_merge_findings_does_not_duplicate_evidence():
+        fingerprint = "same-finding"
+>       first = make_finding(
+            asset="example.test",
+            title="Observation",
+            source_tool="nmap",
+            evidence_id="e-same",
+            fingerprint=fingerprint,
+        )
+
+tests/test_common.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+asset = 'example.test', title = 'Observation', source_tool = 'nmap'
+evidence_id = 'e-same', fingerprint = 'same-finding'
+
+    def make_finding(
+        *,
+        asset: str,
+        title: str,
+        source_tool: str,
+        evidence_id: str,
+        fingerprint: str,
+    ) -> Finding:
+        return Finding(
+            finding_id=f"f-{fingerprint}",
+            asset=asset,
+            asset_type="domain",
+            title=title,
+            source_tools=[source_tool],
+            fingerprint=fingerprint,
+            evidence=[
+>               Evidence(
+                ^^^^^^^^
+                    evidence_id=evidence_id,
+                    source_tool=source_tool,
+                    source_file=f"{source_tool}.json",
+                    raw_text=asset,
+                )
+            ],
+        )
+E       NameError: name 'Evidence' is not defined
+
+tests/test_common.py:29: NameError
+_______________________ test_nikto_json_maps_to_findings _______________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_nikto_json_maps_to_findin0')
+
+    def test_nikto_json_maps_to_findings(tmp_path: Path):
+        path = tmp_path / "nikto.json"
+        content = json.dumps(NIKTO_JSON)
+        path.write_text(content)
+    
+        findings = NiktoParser().parse(path, content)
+    
+        assert len(findings) == 2
+>       assert all(finding.source_tools == ["nikto"] for finding in findings)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_nikto.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_nikto.py:65: in <genexpr>
+    assert all(finding.source_tools == ["nikto"] for finding in findings)
+               ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-418ee80a91f3a410', asset_id='https://app.example.test', scanner='nikto', raw_severity='unknown',....datetime(2026, 9, 5, 16, 5, 3, 49583, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'source_tools'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'source_tools'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+____________________ test_nikto_json_preserves_cve_as_lead _____________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_nikto_json_preserves_cve_0')
+
+    def test_nikto_json_preserves_cve_as_lead(tmp_path: Path):
+        path = tmp_path / "nikto.json"
+        content = json.dumps(NIKTO_JSON)
+        path.write_text(content)
+    
+        findings = NiktoParser().parse(path, content)
+    
+>       cve_finding = next(
+            finding for finding in findings
+            if "CVE-2024-1234" in finding.cve_ids
+        )
+
+tests/test_nikto.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_nikto.py:81: in <genexpr>
+    if "CVE-2024-1234" in finding.cve_ids
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-418ee80a91f3a410', asset_id='https://app.example.test', scanner='nikto', raw_severity='unknown',...datetime(2026, 9, 5, 16, 5, 3, 109060, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'cve_ids'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'cve_ids'. Did you mean: 'cwe_ids'?
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+__________________ test_nikto_text_maps_findings_and_evidence __________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_nikto_text_maps_findings_0')
+
+    def test_nikto_text_maps_findings_and_evidence(tmp_path: Path):
+        path = tmp_path / "nikto.txt"
+        path.write_text(NIKTO_TEXT)
+    
+        findings = NiktoParser().parse(path, NIKTO_TEXT)
+    
+        assert len(findings) == 3
+>       assert all(finding.asset == "app.example.test" for finding in findings)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_nikto.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_nikto.py:102: in <genexpr>
+    assert all(finding.asset == "app.example.test" for finding in findings)
+               ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-04a9af88a9f362ec', asset_id='app.example.test', scanner='nikto', raw_severity='unknown', normali...datetime(2026, 9, 5, 16, 5, 3, 148838, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'asset'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'asset'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+_________________________ test_nikto_text_extracts_cve _________________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_nikto_text_extracts_cve0')
+
+    def test_nikto_text_extracts_cve(tmp_path: Path):
+        path = tmp_path / "nikto.txt"
+        path.write_text(NIKTO_TEXT)
+    
+        findings = NiktoParser().parse(path, NIKTO_TEXT)
+    
+>       assert any("CVE-2024-1234" in finding.cve_ids for finding in findings)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_nikto.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_nikto.py:116: in <genexpr>
+    assert any("CVE-2024-1234" in finding.cve_ids for finding in findings)
+                                  ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-04a9af88a9f362ec', asset_id='app.example.test', scanner='nikto', raw_severity='unknown', normali...datetime(2026, 9, 5, 16, 5, 3, 182012, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'cve_ids'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'cve_ids'. Did you mean: 'cwe_ids'?
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+______________________ test_nikto_parser_is_deterministic ______________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_nikto_parser_is_determini0')
+
+    def test_nikto_parser_is_deterministic(tmp_path: Path):
+        path = tmp_path / "nikto.json"
+        content = json.dumps(NIKTO_JSON)
+        path.write_text(content)
+    
+        parser = NiktoParser()
+        first = parser.parse(path, content)
+        second = parser.parse(path, content)
+    
+        assert [item.finding_id for item in first] == [item.finding_id for item in second]
+>       assert [item.fingerprint for item in first] == [item.fingerprint for item in second]
+                ^^^^^^^^^^^^^^^^
+
+tests/test_nikto.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-418ee80a91f3a410', asset_id='https://app.example.test', scanner='nikto', raw_severity='unknown',...datetime(2026, 9, 5, 16, 5, 3, 215529, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'fingerprint'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'fingerprint'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+________________ test_ollama_uses_schema_and_validates_response ________________
+
+    @pytest.mark.asyncio
+    async def test_ollama_uses_schema_and_validates_response():
+        client = FakeOllamaClient(valid_content())
+        provider = OllamaProvider(client=client, model="qwen3")
+    
+        result = await provider.assess(
+>           make_finding(),
+            ^^^^^^^^^^^^^^
+            "system",
+            "user",
+        )
+
+tests/test_ollama_provider.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def make_finding() -> Finding:
+        return Finding(
+            finding_id="f-ollama-test",
+            asset="app.example.test",
+            asset_type="domain",
+            title="Service observed",
+            fingerprint="ollama-test",
+            evidence=[
+>               Evidence(
+                ^^^^^^^^
+                    evidence_id="e-ollama-test",
+                    source_tool="test",
+                    raw_text="Observed by fixture",
+                )
+            ],
+        )
+E       NameError: name 'Evidence' is not defined
+
+tests/test_ollama_provider.py:31: NameError
+_______________________ test_ollama_rejects_invalid_json _______________________
+
+    @pytest.mark.asyncio
+    async def test_ollama_rejects_invalid_json():
+        client = FakeOllamaClient("not-json")
+        provider = OllamaProvider(client=client)
+    
+        with pytest.raises(ValueError, match="schema-invalid"):
+>           await provider.assess(make_finding(), "system", "user")
+                                  ^^^^^^^^^^^^^^
+
+tests/test_ollama_provider.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def make_finding() -> Finding:
+        return Finding(
+            finding_id="f-ollama-test",
+            asset="app.example.test",
+            asset_type="domain",
+            title="Service observed",
+            fingerprint="ollama-test",
+            evidence=[
+>               Evidence(
+                ^^^^^^^^
+                    evidence_id="e-ollama-test",
+                    source_tool="test",
+                    raw_text="Observed by fixture",
+                )
+            ],
+        )
+E       NameError: name 'Evidence' is not defined
+
+tests/test_ollama_provider.py:31: NameError
+_____________________ test_ollama_rejects_wrong_finding_id _____________________
+
+    @pytest.mark.asyncio
+    async def test_ollama_rejects_wrong_finding_id():
+        payload = json.loads(valid_content())
+        payload["finding_id"] = "f-wrong"
+        client = FakeOllamaClient(json.dumps(payload))
+        provider = OllamaProvider(client=client)
+    
+        with pytest.raises(ValueError, match="finding_id"):
+>           await provider.assess(make_finding(), "system", "user")
+                                  ^^^^^^^^^^^^^^
+
+tests/test_ollama_provider.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def make_finding() -> Finding:
+        return Finding(
+            finding_id="f-ollama-test",
+            asset="app.example.test",
+            asset_type="domain",
+            title="Service observed",
+            fingerprint="ollama-test",
+            evidence=[
+>               Evidence(
+                ^^^^^^^^
+                    evidence_id="e-ollama-test",
+                    source_tool="test",
+                    raw_text="Observed by fixture",
+                )
+            ],
+        )
+E       NameError: name 'Evidence' is not defined
+
+tests/test_ollama_provider.py:31: NameError
+_________________ test_mock_provider_returns_valid_assessment __________________
+
+    @pytest.mark.asyncio
+    async def test_mock_provider_returns_valid_assessment():
+        result = await assess_with_provider(
+>           make_finding(),
+            ^^^^^^^^^^^^^^
+            MockProvider(),
+        )
+
+tests/test_providers.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def make_finding() -> Finding:
+        return Finding(
+            finding_id="f-test",
+            asset="app.example.test",
+            asset_type="domain",
+            title="Example scanner observation",
+            fingerprint="fingerprint-test",
+            evidence=[
+>               Finding(evidence=evidence)
+                                 ^^^^^^^^
+    
+            ],
+        )
+E       NameError: name 'evidence' is not defined
+
+tests/test_providers.py:21: NameError
+______________________ test_provider_timeout_is_captured _______________________
+
+    @pytest.mark.asyncio
+    async def test_provider_timeout_is_captured():
+        result = await assess_with_provider(
+>           make_finding(),
+            ^^^^^^^^^^^^^^
+            MockProvider(delay_seconds=0.05),
+            timeout_seconds=0.001,
+        )
+
+tests/test_providers.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def make_finding() -> Finding:
+        return Finding(
+            finding_id="f-test",
+            asset="app.example.test",
+            asset_type="domain",
+            title="Example scanner observation",
+            fingerprint="fingerprint-test",
+            evidence=[
+>               Finding(evidence=evidence)
+                                 ^^^^^^^^
+    
+            ],
+        )
+E       NameError: name 'evidence' is not defined
+
+tests/test_providers.py:21: NameError
+___________________ test_multiple_providers_run_in_parallel ____________________
+
+    @pytest.mark.asyncio
+    async def test_multiple_providers_run_in_parallel():
+        results = await assess_with_providers(
+>           make_finding(),
+            ^^^^^^^^^^^^^^
+            [MockProvider(model="mock-a"), MockProvider(model="mock-b")],
+        )
+
+tests/test_providers.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def make_finding() -> Finding:
+        return Finding(
+            finding_id="f-test",
+            asset="app.example.test",
+            asset_type="domain",
+            title="Example scanner observation",
+            fingerprint="fingerprint-test",
+            evidence=[
+>               Finding(evidence=evidence)
+                                 ^^^^^^^^
+    
+            ],
+        )
+E       NameError: name 'evidence' is not defined
+
+tests/test_providers.py:21: NameError
+__________________ test_invalid_provider_failure_is_captured ___________________
+
+    @pytest.mark.asyncio
+    async def test_invalid_provider_failure_is_captured():
+        result = await assess_with_provider(
+>           make_finding(),
+            ^^^^^^^^^^^^^^
+            MockProvider(invalid_response=True),
+        )
+
+tests/test_providers.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def make_finding() -> Finding:
+        return Finding(
+            finding_id="f-test",
+            asset="app.example.test",
+            asset_type="domain",
+            title="Example scanner observation",
+            fingerprint="fingerprint-test",
+            evidence=[
+>               Finding(evidence=evidence)
+                                 ^^^^^^^^
+    
+            ],
+        )
+E       NameError: name 'evidence' is not defined
+
+tests/test_providers.py:21: NameError
+_________ test_report_contains_one_assessment_per_successful_provider __________
+
+    @pytest.mark.asyncio
+    async def test_report_contains_one_assessment_per_successful_provider():
+        finding = make_finding()
+        providers = [
+            MockProvider(model="mock-a"),
+            MockProvider(model="mock-b"),
+        ]
+    
+        results = await assess_with_providers(finding, providers)
+>       report = build_finding_report(finding, results)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_report.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+finding = Finding(finding_id='f-report', asset_id='app.example.test', scanner='test', raw_severity=None, normalized_severity=<Se...datetime(2026, 9, 5, 16, 5, 3, 349091, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+results = [ProviderResult(provider='mock', model='mock-a', assessment=None, warnings=[], error="Provider task failed: 'str' obje... model='mock-b', assessment=None, warnings=[], error="Provider task failed: 'str' object has no attribute 'raw_text'")]
+
+    def build_finding_report(
+        finding: Finding,
+        results: list[ProviderResult],
+    ) -> dict[str, Any]:
+        assessments = [
+            result.assessment.model_dump(mode="json")
+            for result in results
+            if result.assessment is not None
+        ]
+    
+        warnings: list[str] = []
+        for result in results:
+            warnings.extend(
+                f"{result.provider}/{result.model}: {warning}"
+                for warning in result.warnings
+            )
+            if result.error:
+                warnings.append(
+                    f"{result.provider}/{result.model}: {result.error}"
+                )
+    
+        severities = [item["severity"] for item in assessments]
+        priorities = [item["priority_score"] for item in assessments]
+        confidences = [item["confidence"] for item in assessments]
+    
+        valid_evidence_ids = {
+>       evidence.evidence_id
+        for evidence in finding.evidence
+        }
+E       AttributeError: 'str' object has no attribute 'evidence_id'
+
+harness/evaluation/report.py:41: AttributeError
+____________________ test_report_preserves_timeout_warning _____________________
+
+    @pytest.mark.asyncio
+    async def test_report_preserves_timeout_warning():
+        finding = make_finding()
+        results = await assess_with_providers(
+            finding,
+            [
+                MockProvider(model="fast"),
+                MockProvider(model="slow", delay_seconds=0.05),
+            ],
+            timeout_seconds=0.001,
+        )
+    
+>       report = build_finding_report(finding, results)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_report.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+finding = Finding(finding_id='f-report', asset_id='app.example.test', scanner='test', raw_severity=None, normalized_severity=<Se...datetime(2026, 9, 5, 16, 5, 3, 369026, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+results = [ProviderResult(provider='mock', model='fast', assessment=None, warnings=[], error="Provider task failed: 'str' object...', model='slow', assessment=None, warnings=[], error="Provider task failed: 'str' object has no attribute 'raw_text'")]
+
+    def build_finding_report(
+        finding: Finding,
+        results: list[ProviderResult],
+    ) -> dict[str, Any]:
+        assessments = [
+            result.assessment.model_dump(mode="json")
+            for result in results
+            if result.assessment is not None
+        ]
+    
+        warnings: list[str] = []
+        for result in results:
+            warnings.extend(
+                f"{result.provider}/{result.model}: {warning}"
+                for warning in result.warnings
+            )
+            if result.error:
+                warnings.append(
+                    f"{result.provider}/{result.model}: {result.error}"
+                )
+    
+        severities = [item["severity"] for item in assessments]
+        priorities = [item["priority_score"] for item in assessments]
+        confidences = [item["confidence"] for item in assessments]
+    
+        valid_evidence_ids = {
+>       evidence.evidence_id
+        for evidence in finding.evidence
+        }
+E       AttributeError: 'str' object has no attribute 'evidence_id'
+
+harness/evaluation/report.py:41: AttributeError
+____________________ test_build_report_contains_run_metrics ____________________
+
+    @pytest.mark.asyncio
+    async def test_build_report_contains_run_metrics():
+        finding = make_finding()
+        results = await assess_with_providers(
+            finding,
+            [MockProvider(model="mock-a")],
+        )
+    
+>       report = build_report(
+            [finding],
+            {finding.finding_id: results},
+            scope={"engagement_id": "test"},
+            input_files=["fixture.json"],
+        )
+
+tests/test_report.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+harness/evaluation/report.py:104: in build_report
+    build_finding_report(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+finding = Finding(finding_id='f-report', asset_id='app.example.test', scanner='test', raw_severity=None, normalized_severity=<Se...datetime(2026, 9, 5, 16, 5, 3, 383046, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+results = [ProviderResult(provider='mock', model='mock-a', assessment=None, warnings=[], error="Provider task failed: 'str' object has no attribute 'raw_text'")]
+
+    def build_finding_report(
+        finding: Finding,
+        results: list[ProviderResult],
+    ) -> dict[str, Any]:
+        assessments = [
+            result.assessment.model_dump(mode="json")
+            for result in results
+            if result.assessment is not None
+        ]
+    
+        warnings: list[str] = []
+        for result in results:
+            warnings.extend(
+                f"{result.provider}/{result.model}: {warning}"
+                for warning in result.warnings
+            )
+            if result.error:
+                warnings.append(
+                    f"{result.provider}/{result.model}: {result.error}"
+                )
+    
+        severities = [item["severity"] for item in assessments]
+        priorities = [item["priority_score"] for item in assessments]
+        confidences = [item["confidence"] for item in assessments]
+    
+        valid_evidence_ids = {
+>       evidence.evidence_id
+        for evidence in finding.evidence
+        }
+E       AttributeError: 'str' object has no attribute 'evidence_id'
+
+harness/evaluation/report.py:41: AttributeError
+______________ test_unknown_mock_assessments_require_human_review ______________
+
+    @pytest.mark.asyncio
+    async def test_unknown_mock_assessments_require_human_review():
+        finding = make_finding()
+    
+        results = await assess_with_providers(
+            finding,
+            [MockProvider(model="mock-a")],
+        )
+    
+>       report = build_finding_report(finding, results)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_report.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+finding = Finding(finding_id='f-report', asset_id='app.example.test', scanner='test', raw_severity=None, normalized_severity=<Se...datetime(2026, 9, 5, 16, 5, 3, 398894, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+results = [ProviderResult(provider='mock', model='mock-a', assessment=None, warnings=[], error="Provider task failed: 'str' object has no attribute 'raw_text'")]
+
+    def build_finding_report(
+        finding: Finding,
+        results: list[ProviderResult],
+    ) -> dict[str, Any]:
+        assessments = [
+            result.assessment.model_dump(mode="json")
+            for result in results
+            if result.assessment is not None
+        ]
+    
+        warnings: list[str] = []
+        for result in results:
+            warnings.extend(
+                f"{result.provider}/{result.model}: {warning}"
+                for warning in result.warnings
+            )
+            if result.error:
+                warnings.append(
+                    f"{result.provider}/{result.model}: {result.error}"
+                )
+    
+        severities = [item["severity"] for item in assessments]
+        priorities = [item["priority_score"] for item in assessments]
+        confidences = [item["confidence"] for item in assessments]
+    
+        valid_evidence_ids = {
+>       evidence.evidence_id
+        for evidence in finding.evidence
+        }
+E       AttributeError: 'str' object has no attribute 'evidence_id'
+
+harness/evaluation/report.py:41: AttributeError
+__________________ test_report_surfaces_provider_disagreement __________________
+
+    @pytest.mark.asyncio
+    async def test_report_surfaces_provider_disagreement():
+        finding = make_finding()
+        results = await assess_with_providers(
+            finding,
+            [
+                FixedProvider("low-model", "low", 25),
+                FixedProvider("high-model", "high", 85),
+            ],
+        )
+    
+>       report = build_finding_report(finding, results)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_report.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+finding = Finding(finding_id='f-report', asset_id='app.example.test', scanner='test', raw_severity=None, normalized_severity=<Se...datetime(2026, 9, 5, 16, 5, 3, 413475, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+results = [ProviderResult(provider='test', model='low-model', assessment=None, warnings=[], error="Provider task failed: 'str' o...el='high-model', assessment=None, warnings=[], error="Provider task failed: 'str' object has no attribute 'raw_text'")]
+
+    def build_finding_report(
+        finding: Finding,
+        results: list[ProviderResult],
+    ) -> dict[str, Any]:
+        assessments = [
+            result.assessment.model_dump(mode="json")
+            for result in results
+            if result.assessment is not None
+        ]
+    
+        warnings: list[str] = []
+        for result in results:
+            warnings.extend(
+                f"{result.provider}/{result.model}: {warning}"
+                for warning in result.warnings
+            )
+            if result.error:
+                warnings.append(
+                    f"{result.provider}/{result.model}: {result.error}"
+                )
+    
+        severities = [item["severity"] for item in assessments]
+        priorities = [item["priority_score"] for item in assessments]
+        confidences = [item["confidence"] for item in assessments]
+    
+        valid_evidence_ids = {
+>       evidence.evidence_id
+        for evidence in finding.evidence
+        }
+E       AttributeError: 'str' object has no attribute 'evidence_id'
+
+harness/evaluation/report.py:41: AttributeError
+________________________ test_redacts_finding_evidence _________________________
+
+    def test_redacts_finding_evidence():
+        finding = Finding(
+            finding_id="f-1",
+            asset="example.test",
+            asset_type="domain",
+            title="Scanner observation",
+            description="password=secret123",
+            fingerprint="1",
+            evidence=[
+                Finding(
+>                   evidence=evidence
+                             ^^^^^^^^
+                )
+            ],
+        )
+E       NameError: name 'evidence' is not defined
+
+tests/test_security.py:39: NameError
+___________________ test_prompt_delimits_untrusted_evidence ____________________
+
+    def test_prompt_delimits_untrusted_evidence():
+>       finding = Finding(
+            finding_id="f-1",
+            asset="example.test",
+            asset_type="domain",
+            title="Scanner observation",
+            fingerprint="1",
+        )
+E       pydantic_core._pydantic_core.ValidationError: 2 validation errors for Finding
+E       asset_id
+E         Field required [type=missing, input_value={'finding_id': 'f-1', 'as...on', 'fingerprint': '1'}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.12/v/missing
+E       scanner
+E         Field required [type=missing, input_value={'finding_id': 'f-1', 'as...on', 'fingerprint': '1'}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.12/v/missing
+
+tests/test_security.py:53: ValidationError
+____________________ test_subfinder_maps_hosts_to_findings _____________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_subfinder_maps_hosts_to_f0')
+
+    def test_subfinder_maps_hosts_to_findings(tmp_path: Path):
+        path = tmp_path / "subfinder.jsonl"
+        path.write_text(SUBFINDER_JSONL)
+    
+        findings = SubfinderParser().parse(path, SUBFINDER_JSONL)
+    
+        assert len(findings) == 3
+>       assert findings[0].asset == "api.example.test"
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_subfinder.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-eff88bf85fe7c84d', asset_id='api.example.test', scanner='subfinder', raw_severity='info', normal...datetime(2026, 9, 5, 16, 5, 3, 451135, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'asset'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'asset'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+______________________ test_subfinder_normalizes_hostname ______________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_subfinder_normalizes_host0')
+
+    def test_subfinder_normalizes_hostname(tmp_path: Path):
+        path = tmp_path / "subfinder.jsonl"
+        path.write_text(SUBFINDER_JSONL)
+    
+        findings = SubfinderParser().parse(path, SUBFINDER_JSONL)
+    
+>       assert findings[2].asset == "www.example.test"
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_subfinder.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-09c36e3543c5fa31', asset_id='www.example.test', scanner='subfinder', raw_severity='info', normal...datetime(2026, 9, 5, 16, 5, 3, 497677, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'asset'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'asset'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+______________________ test_subfinder_preserves_evidence _______________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_subfinder_preserves_evide0')
+
+    def test_subfinder_preserves_evidence(tmp_path: Path):
+        path = tmp_path / "subfinder.jsonl"
+        path.write_text(SUBFINDER_JSONL)
+    
+        findings = SubfinderParser().parse(path, SUBFINDER_JSONL)
+>       evidence = findings[1].evidence[0]
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 0
+
+tests/test_subfinder.py:57: KeyError
+_____________________ test_subfinder_skips_malformed_lines _____________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_subfinder_skips_malformed0')
+
+    def test_subfinder_skips_malformed_lines(tmp_path: Path):
+        path = tmp_path / "subfinder.jsonl"
+        content = (
+            '{"host":"valid.example.test","source":"crtsh"}\n'
+            'not valid json\n'
+            '{"source":"missing-host"}\n'
+        )
+        path.write_text(content)
+    
+        findings = SubfinderParser().parse(path, content)
+    
+        assert len(findings) == 1
+>       assert findings[0].asset == "valid.example.test"
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_subfinder.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-a571442b32844d23', asset_id='valid.example.test', scanner='subfinder', raw_severity='info', norm...datetime(2026, 9, 5, 16, 5, 3, 551612, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'asset'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'asset'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+_______________________ test_subfinder_is_deterministic ________________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_subfinder_is_deterministi0')
+
+    def test_subfinder_is_deterministic(tmp_path: Path):
+        path = tmp_path / "subfinder.jsonl"
+        path.write_text(SUBFINDER_JSONL)
+    
+        parser = SubfinderParser()
+        first = parser.parse(path, SUBFINDER_JSONL)
+        second = parser.parse(path, SUBFINDER_JSONL)
+    
+        assert [item.finding_id for item in first] == [item.finding_id for item in second]
+>       assert [item.fingerprint for item in first] == [item.fingerprint for item in second]
+                ^^^^^^^^^^^^^^^^
+
+tests/test_subfinder.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-eff88bf85fe7c84d', asset_id='api.example.test', scanner='subfinder', raw_severity='info', normal...datetime(2026, 9, 5, 16, 5, 3, 584631, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'fingerprint'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'fingerprint'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+__________________ test_duplicate_hosts_have_same_fingerprint __________________
+
+tmp_path = PosixPath('/private/var/folders/fn/qwr8k9z96ljgj_qyw5zqv_3m0000gn/T/pytest-of-casha/pytest-33/test_duplicate_hosts_have_same0')
+
+    def test_duplicate_hosts_have_same_fingerprint(tmp_path: Path):
+        path = tmp_path / "subfinder.jsonl"
+        content = (
+            '{"host":"api.example.test","source":"crtsh"}\n'
+            '{"host":"API.EXAMPLE.TEST.","source":"github"}\n'
+        )
+        path.write_text(content)
+    
+        findings = SubfinderParser().parse(path, content)
+    
+        assert len(findings) == 2
+>       assert findings[0].fingerprint == findings[1].fingerprint
+               ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_subfinder.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Finding(finding_id='f-eff88bf85fe7c84d', asset_id='api.example.test', scanner='subfinder', raw_severity='info', normal...datetime(2026, 9, 5, 16, 5, 3, 622181, tzinfo=datetime.timezone.utc), status=<FindingStatus.OPEN: 'open'>, metadata={})
+item = 'fingerprint'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Finding' object has no attribute 'fingerprint'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/main.py:1026: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_common.py::test_merge_findings_combines_sources_and_evidence
+FAILED tests/test_common.py::test_merge_findings_does_not_duplicate_evidence
+FAILED tests/test_nikto.py::test_nikto_json_maps_to_findings - AttributeError...
+FAILED tests/test_nikto.py::test_nikto_json_preserves_cve_as_lead - Attribute...
+FAILED tests/test_nikto.py::test_nikto_text_maps_findings_and_evidence - Attr...
+FAILED tests/test_nikto.py::test_nikto_text_extracts_cve - AttributeError: 'F...
+FAILED tests/test_nikto.py::test_nikto_parser_is_deterministic - AttributeErr...
+FAILED tests/test_ollama_provider.py::test_ollama_uses_schema_and_validates_response
+FAILED tests/test_ollama_provider.py::test_ollama_rejects_invalid_json - Name...
+FAILED tests/test_ollama_provider.py::test_ollama_rejects_wrong_finding_id - ...
+FAILED tests/test_providers.py::test_mock_provider_returns_valid_assessment
+FAILED tests/test_providers.py::test_provider_timeout_is_captured - NameError...
+FAILED tests/test_providers.py::test_multiple_providers_run_in_parallel - Nam...
+FAILED tests/test_providers.py::test_invalid_provider_failure_is_captured - N...
+FAILED tests/test_report.py::test_report_contains_one_assessment_per_successful_provider
+FAILED tests/test_report.py::test_report_preserves_timeout_warning - Attribut...
+FAILED tests/test_report.py::test_build_report_contains_run_metrics - Attribu...
+FAILED tests/test_report.py::test_unknown_mock_assessments_require_human_review
+FAILED tests/test_report.py::test_report_surfaces_provider_disagreement - Att...
+FAILED tests/test_security.py::test_redacts_finding_evidence - NameError: nam...
+FAILED tests/test_security.py::test_prompt_delimits_untrusted_evidence - pyda...
+FAILED tests/test_subfinder.py::test_subfinder_maps_hosts_to_findings - Attri...
+FAILED tests/test_subfinder.py::test_subfinder_normalizes_hostname - Attribut...
+FAILED tests/test_subfinder.py::test_subfinder_preserves_evidence - KeyError: 0
+FAILED tests/test_subfinder.py::test_subfinder_skips_malformed_lines - Attrib...
+FAILED tests/test_subfinder.py::test_subfinder_is_deterministic - AttributeEr...
+FAILED tests/test_subfinder.py::test_duplicate_hosts_have_same_fingerprint - ...
+27 failed, 29 passed in 1.30s

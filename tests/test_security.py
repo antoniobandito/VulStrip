@@ -29,19 +29,19 @@ def test_flags_injection_without_treating_it_as_instruction():
 def test_redacts_finding_evidence():
     finding = Finding(
         finding_id="f-1",
-        asset="example.test",
-        asset_type="domain",
+        asset_id="example.test",
+        scanner="test",
         title="Scanner observation",
         description="password=secret123",
-        fingerprint="1",
         evidence=[
             Evidence(
                 evidence_id="e-1",
                 source_tool="test",
-                raw_text="Bearer abcdefghijklmnop",
+                raw_text="Evidence fixture",
             )
         ],
     )
+    ...
 
     finding, redactions, flags = redact_finding(finding)
 
@@ -54,11 +54,19 @@ def test_redacts_finding_evidence():
 def test_prompt_delimits_untrusted_evidence():
     finding = Finding(
         finding_id="f-1",
-        asset="example.test",
-        asset_type="domain",
+        asset_id="example.test",
+        scanner="test",
         title="Scanner observation",
-        fingerprint="1",
+        description="password=secret123",
+        evidence=[
+            Evidence(
+                evidence_id="e-1",
+                source_tool="test",
+                raw_text="Evidence fixture",
+            )
+        ],
     )
+    ...
 
     system, user, delimiter = build_assessment_prompt(finding)
 

@@ -1,19 +1,38 @@
+# Canonical provider configuration for VulStrip.
+#
+# - All model endpoints, temperatures, max_tokens, and fallback order are defined here.
+# - API keys are read from environment variables specified by `api_key_env`.
+#   Use `null` if no key is required (e.g., local Ollama).
+#
+# Do not hard-code provider settings in Python; always load via harness/providers/config.py.
+
 providers:
-  - id: mock-a
+  - id: mock
+    name: Mock Provider
     type: mock
-    model: mock-a
     enabled: true
-    timeout_seconds: 10
+    model:
+      - id: mock-vuln-analyst
+        name: mock-vuln-analyst
+        default: true
+        temperature: 0.2
+        max_tokens: 1024
+        priority: 1
 
-  - id: mock-b
-    type: mock
-    model: mock-b
-    enabled: true
-    timeout_seconds: 10
-
-  - id: ollama-qwen
+  - id: ollama
+    name: Ollama
     type: ollama
-    model: qwen3
-    host: http://[ReplaceWithOllamaIP]:11434
-    enabled: false
-    timeout_seconds: 30
+    enabled: true
+    base_url: http://localhost:11434
+    api_key_env: null
+    model:
+      - id: llama3
+        name: llama3
+        default: false
+        temperature: 0.2
+        max_tokens: 1024
+        priority: 2
+
+fallback_order:
+  - mock
+  - ollama

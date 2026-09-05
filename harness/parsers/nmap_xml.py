@@ -2,7 +2,7 @@ from pathlib import Path
 import hashlib
 import xml.etree.ElementTree as ET
 
-from harness.models.finding import Finding
+from harness.models.finding import Finding, Evidence
 from harness.parsers.common import (
     canonical_fingerprint,
     normalize_severity,
@@ -60,8 +60,11 @@ class NmapXMLParser:
                     })
 
                 observed = {
+                    "port": port,
+                    "protocol": protocol,
+                    "service": service,
                     "port_state": state,
-                    "service": service_data,
+                    "service_data": service_data,
                     "scripts": scripts,
                 }
 
@@ -97,15 +100,15 @@ class NmapXMLParser:
                             f"Nmap observed port {port}/{protocol} "
                             f"in state {state}."
                         ),
-                        evidence={
-                            "evidence_id": f"e-{evidence_id}",
-                            "source_file": str(path),
-                            "raw_fragment": raw_fragment,
-                            "observed": observed,
-                            "port": port,
-                            "protocol": protocol,
-                            "service": service,
-                        },
+                        evidence=[
+                            Evidence(
+                                evidence_id=f"e-{evidence_id}",
+                                source_tool=self.tool_name,
+                                source_file=str(path),
+                                raw_text=raw_fragment,
+                                structured_data=observed,
+                            )
+                        ],
                     )
                 )
             return findings

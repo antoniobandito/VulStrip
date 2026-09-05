@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import re
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
@@ -29,8 +30,13 @@ class SeverityLevel(str, Enum):
 class CVSSv3(BaseModel):
     """Optional CVSS v3.1 vector and base score."""
 
-    vector: str = Field(..., description="CVSS v3.1 vector string, e.g. CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H")
-    base_score: float = Field(..., ge=0.0, le=10.0, description="CVSS base score [0.0–10.0]")
+    vector: str = Field(
+        ...,
+        description="CVSS v3.1 vector string, e.g. CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    )
+    base_score: float = Field(
+        ..., ge=0.0, le=10.0, description="CVSS base score [0.0–10.0]"
+    )
 
     @field_validator("vector")
     @classmethod
@@ -40,6 +46,40 @@ class CVSSv3(BaseModel):
         return v
 
 
+class Evidence(BaseModel):
+    """Structured evidence item attached to a finding."""
+
+    evidence_id: str
+    source_tool: str
+    source_file: Optional[str] = None
+    raw_text: Optional[str] = None
+    structured_data: Dict[str, Any] = Field(default_factory=dict)
+
+class ModelAssessment(BaseModel):
+    """Structured assessment returned by an LLM provider."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    provider: str
+    model: str
+    finding_id: str
+
+    severity: str
+    priority_score: float
+    exploitability: str
+    exploitability_reason: str
+    impact: str
+    confidence: float = Field(ge=0.0, le=1.0)
+
+    recommended_actions: List[str] = Field(default_factory=list)
+    validation_steps: List[str] = Field(default_factory=list)
+    assumptions: List[str] = Field(default_factory=list)
+    cited_evidence: List[str] = Field(default_factory=list)
+    unsafe_or_unsupported_claims: List[str] = Field(default_factory=list)
+
+    raw_response_hash: str
+    prompt_version: str
+
 class Finding(BaseModel):
     """
     Canonical vulnerability finding for VulStrip.
@@ -47,62 +87,93 @@ class Finding(BaseModel):
     All fields are designed to be scanner-agnostic and suitable for
     normalization, deduplication, and downstream AI analysis.
     """
+
     model_config = ConfigDict(
         use_enum_values=True,
         validate_assignment=True,
     )
 
     # Identity & asset linkage
-    finding_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique identifier for this finding")
-    asset_id: str = Field(..., description="Logical asset identifier (e.g., hostname, IP, service key)")
+    finding_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()),
+        description="Unique identifier for this finding",
+    )
+    asset_id: str = Field(
+        ..., description="Logical asset identifier (e.g., hostname, IP, service key)"
+    )
 
     # Source & severity
-    scanner: str = Field(..., description="Scanner/tool that produced this finding (e.g., nikto, nmap, subfinder)")
-    raw_severity: Optional[str] = Field(None, description="Original severity string from scanner")
-    normalized_severity: SeverityLevel = Field(SeverityLevel.UNKNOWN, description="Normalized severity level")
+    scanner: str = Field(
+        ...,
+        description="Scanner/tool that produced this finding (e.g., nikto, nmap, subfinder)",
+    )
+    raw_severity: Optional[str] = Field(
+        None, description="Original severity string from scanner"
+    )
+    normalized_severity: SeverityLevel = Field(
+        SeverityLevel.UNKNOWN, description="Normalized severity level"
+    )
 
     # Classification
-    cwe_ids: List[str] = Field(default_factory=list, description="Associated CWE IDs, e.g. ['CWE-79']")
-    cvss_v3: Optional[CVSSv3] = Field(None, description="Optional CVSS v3.1 details")
+    cwe_ids: List[str] = Field(
+        default_factory=list, description="Associated CWE IDs, e.g. ['CWE-79']"
+    )
+    cvss_v3: Optional[CVSSv3] = Field(
+        None, description="Optional CVSS v3.1 details"
+    )
 
     # Description & evidence
-    title: Optional[str] = Field(None, description="Short human-readable title")
-    description: Optional[str] = Field(None, description="Detailed description of the finding")
-    evidence: Dict[str, Any] = Field(default_factory=dict, description="Scanner-specific evidence (raw fields, snippets, etc.)")
+    title: Optional[str] = Field(
+        None, description="Short human-readable title"
+    )
+    description: Optional[str] = Field(
+        None, description="Detailed description of the finding"
+    )
+    evidence: List[Evidence] = Field(
+        default_factory=list,
+        description="Scanner-specific evidence items",
+    )
 
     # Remediation & references
-    remediation: Optional[str] = Field(None, description="Recommended remediation steps")
-    references: List[str] = Field(default_factory=list, description="URLs or IDs to external references (CVE, advisories, etc.)")
+    remediation: Optional[str] = Field(
+        None, description="Recommended remediation steps"
+    )
+    references: List[str] = Field(
+        default_factory=list,
+        description="URLs or IDs to external references (CVE, advisories, etc.)",
+    )
 
     # Lifecycle
-    first_seen: datetime = Field(default_factory=lambda: datetime.now(timezone.utc),
-                                 description="First time this finding was observed")
-    last_seen: datetime = Field(default_factory=lambda: datetime.now(timezone.utc),
-                                description="Last time this finding was observed/updated")
-    status: FindingStatus = Field(FindingStatus.OPEN, description="Current lifecycle status")
+    first_seen: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="First time this finding was observed",
+    )
+    last_seen: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Last time this finding was observed/updated",
+    )
+    status: FindingStatus = Field(
+        FindingStatus.OPEN, description="Current lifecycle status"
+    )
 
     # Free-form metadata for future extension
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional scanner or pipeline metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional scanner or pipeline metadata",
+    )
 
     @field_validator("cwe_ids")
     @classmethod
-    def validate_cwe_ids(cls, values: list[str]) -> list[str]:
-        normalized: list[str] = []
-
-        for value in values:
-            if not isinstance(value, str):
+    def validate_cwe_ids(cls, v: List[str]) -> List[str]:
+        cleaned = []
+        for cwe in v:
+            if not cwe:
                 continue
-
-            match = re.fullmatch(
-                r"(?:CWE-)?(\d+)",
-                value.strip(),
-                re.IGNORECASE,
-            )
-
-            if match:
-                normalized.append(f"CWE-{match.group(1)}")
-
-        return normalized
+            if not cwe.upper().startswith("CWE-"):
+                cleaned.append(f"CWE-{cwe}")
+            else:
+                cleaned.append(cwe.upper())
+        return cleaned
 
     @model_validator(mode="after")
     def ensure_consistent_severity(self) -> "Finding":
@@ -122,11 +193,10 @@ class Finding(BaseModel):
             }
 
             value = mapping.get(raw, SeverityLevel.UNKNOWN.value)
-
-            # Bypass pydantic validation to avoid recursion
             object.__setattr__(self, "normalized_severity", value)
-            
+
         return self
+
 
 def upgrade_legacy_finding(legacy: Dict[str, Any]) -> Finding:
     """
@@ -158,12 +228,18 @@ def upgrade_legacy_finding(legacy: Dict[str, Any]) -> Finding:
     extra: Dict[str, Any] = {}
 
     # Basic identity & asset
-    data["finding_id"] = legacy.get("finding_id", legacy.get("id", str(uuid.uuid4())))
-    data["asset_id"] = legacy.get("asset_id", legacy.get("asset", legacy.get("host", "unknown")))
+    data["finding_id"] = legacy.get(
+        "finding_id", legacy.get("id", str(uuid.uuid4()))
+    )
+    data["asset_id"] = legacy.get(
+        "asset_id", legacy.get("asset", legacy.get("host", "unknown"))
+    )
 
     # Scanner & severity
     data["scanner"] = legacy.get("scanner", legacy.get("source", "unknown"))
-    data["raw_severity"] = legacy.get("raw_severity", legacy.get("severity", legacy.get("risk")))
+    data["raw_severity"] = legacy.get(
+        "raw_severity", legacy.get("severity", legacy.get("risk"))
+    )
 
     # Try to map legacy severity to normalized_severity if present
     raw = data["raw_severity"]
@@ -177,7 +253,10 @@ def upgrade_legacy_finding(legacy: Dict[str, Any]) -> Finding:
             "info": SeverityLevel.INFO.value,
             "informational": SeverityLevel.INFO.value,
         }
-        data["normalized_severity"] = mapping.get(raw_lower, SeverityLevel.UNKNOWN.value)
+
+        data["normalized_severity"] = mapping.get(
+            raw_lower, SeverityLevel.UNKNOWN.value
+        )
     else:
         data["normalized_severity"] = SeverityLevel.UNKNOWN.value
 
@@ -197,8 +276,10 @@ def upgrade_legacy_finding(legacy: Dict[str, Any]) -> Finding:
     data["description"] = legacy.get("description", legacy.get("details"))
 
     # Evidence & remediation
-    data["evidence"] = legacy.get("evidence", {})
-    data["remediation"] = legacy.get("remediation", legacy.get("solution", legacy.get("fix")))
+    data["evidence"] = legacy.get("evidence", [])
+    data["remediation"] = legacy.get(
+        "remediation", legacy.get("solution", legacy.get("fix"))
+    )
 
     # References
     refs = legacy.get("references", legacy.get("refs", []))
@@ -214,13 +295,15 @@ def upgrade_legacy_finding(legacy: Dict[str, Any]) -> Finding:
         if isinstance(val, datetime):
             return val
         if isinstance(val, (int, float)):
-            return datetime.utcfromtimestamp(val)
+            return datetime.fromtimestamp(val, tz=timezone.utc)
         try:
             return datetime.fromisoformat(str(val).replace("Z", "+00:00"))
         except Exception:
             return None
 
-    first = _parse_dt("first_seen") or _parse_dt("created_at") or datetime.utcnow()
+    first = _parse_dt("first_seen") or _parse_dt("created_at") or datetime.now(
+        timezone.utc
+    )
     last = _parse_dt("last_seen") or _parse_dt("updated_at") or first
     data["first_seen"] = first
     data["last_seen"] = last

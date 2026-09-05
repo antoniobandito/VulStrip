@@ -3,7 +3,7 @@ import hashlib
 import json
 from typing import Any
 
-from harness.models.finding import Finding
+from harness.models.finding import Finding, Evidence
 from harness.parsers.common import (
     canonical_fingerprint,
     normalize_severity,
@@ -87,14 +87,19 @@ class SubfinderParser:
                     description=(
                         f"Subfinder reported the hostname {host}."
                     ),
-                    evidence={
-                        "evidence_id": f"e-{evidence_id}",
-                        "source_file": str(path),
-                        "raw_text": raw_line,
-                        "host": host,
-                        "source": source,
-                        "ip": ip,
-                    },
+                    evidence=[
+                        Evidence(
+                            evidence_id=f"e-{evidence_id}",
+                            source_tool=self.tool_name,
+                            source_file=str(path),
+                            raw_text=raw_line,
+                            structured_data={
+                                "host": host,
+                                "source": source,
+                                "ip": ip,
+                            },
+                        )
+                    ],
                 )
             )
 

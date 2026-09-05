@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from harness.models.finding import Evidence, Finding, ModelAssessment
+from harness.models.finding import Finding, Evidence
 from harness.providers.ollama import OllamaProvider
 
 
@@ -23,10 +23,9 @@ class FakeOllamaClient:
 def make_finding() -> Finding:
     return Finding(
         finding_id="f-ollama-test",
-        asset="app.example.test",
-        asset_type="domain",
+        asset_id="app.example.test",
+        scanner="test",
         title="Service observed",
-        fingerprint="ollama-test",
         evidence=[
             Evidence(
                 evidence_id="e-ollama-test",

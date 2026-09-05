@@ -10,7 +10,7 @@ from harness.parsers.common import (
     parse_cwe,
 )
 
-from harness.models.finding import Finding
+from harness.models.finding import Evidence, Finding
 
 
 class NiktoParser:
@@ -145,7 +145,7 @@ class NiktoParser:
 
         return Finding(
             finding_id=f"f-{fingerprint}",
-            asset_id =asset,
+            asset_id=asset,
             scanner=self.tool_name,
             raw_severity=str(
                 row.get("severity")
@@ -162,23 +162,24 @@ class NiktoParser:
             ),
             title=message[:160],
             description=message,
-            cve_ids=cve_ids,
-            tags=["nikto", "scanner_observation"],
-            source_tools=[self.tool_name],
-            fingerprint=fingerprint,
-            evidence={
-                    "evidence_id": f"e-{evidence_id}",
-                    "source_file": str(path),
-                    "raw": row,
-                    "url": url or None,
-                    "method": method,
-                    "osvdb": osvdb,
-                },
-                references=[
-                    f"https://cve.mitre.org/cgi-bin/cvename.cgi?name={cve}"
-                    for cve in cve_ids
-                ],
-            )
+            references=[
+                f"https://cve.mitre.org/cgi-bin/cvename.cgi?name={cve}"
+                for cve in cve_ids
+            ],
+            evidence=[
+                Evidence(
+                    evidence_id=f"e-{evidence_id}",
+                    source_tool=self.tool_name,
+                    source_file=str(path),
+                    raw_text=raw,
+                    structured_data={
+                        "url": url or None,
+                        "method": method,
+                        "osvdb": osvdb,
+                    },
+                )
+            ],
+        )
         
 
     def _parse_text(self, path: Path, content: str) -> list[Finding]:
@@ -259,20 +260,25 @@ class NiktoParser:
                     cwe_ids=[],
                     title=message[:160],
                     description=message,
-                    evidence={
-                        "evidence_id": evidence_id,
-                        "source_file": str(path),
-                        "raw_text": line,
-                        "osvdb": (
-                            osvdb_match.group(1)
-                            if osvdb_match
-                            else None
-                        ),
-                        "url": url or None,
-                    },
                     references=[
                         f"https://cve.mitre.org/cgi-bin/cvename.cgi?name={cve}"
                         for cve in cve_ids
+                    ],
+                    evidence=[
+                        Evidence(
+                            evidence_id=evidence_id,
+                            source_tool=self.tool_name,
+                            source_file=str(path),
+                            raw_text=line,
+                            structured_data={
+                                "osvdb": (
+                                    osvdb_match.group(1)
+                                    if osvdb_match
+                                    else None
+                                ),
+                                "url": url or None,
+                            },
+                        )
                     ],
                 )
             )

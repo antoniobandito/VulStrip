@@ -172,40 +172,34 @@ def merge_findings(findings: Iterable[Finding]) -> list[Finding]:
     merged: dict[str, Finding] = {}
 
     for finding in findings:
-        fingerprint = canonical_fingerprint(
-            asset=finding.asset_id,
-            asset_type=finding.scanner,
-            port=None,
-            protocol=None,
-            service=None,
-            title=finding.title or finding.description or "untitled finding",
-            cve_ids=[],
-        )
+        key = finding.metadata.get("fingerprint")
+        if not key:
+            key = canonical_fingerprint(
+                asset=finding.asset_id,
+                asset_type=finding.scanner,
+                port=None,
+                protocol=None,
+                service=None,
+                title=finding.title or "untitled finding",
+                cve_ids=[],
+            )
 
-        existing = merged.get(fingerprint)
+        existing = merged.get(key)
 
         if existing is None:
-            finding.finding_id = f"f-{fingerprint}"
-            finding.metadata = {
-                **finding.metadata,
-                "fingerprint": fingerprint,
-            }
-            merged[fingerprint] = finding
+            merged[key] = finding
             continue
 
-        existing.cwe_ids = sorted(
-            set(existing.cwe_ids + finding.cwe_ids)
-        )
+        # Merge evidence without duplication by evidence_id
+        existing_ids = {e.evidence_id for e in existing.evidence}
+        for e in finding.evidence:
+            if e.evidence_id not in existing_ids:
+                existing.evidence.append(e)
+                existing_ids.add(e.evidence_id)
 
-        existing.references = sorted(
-            set(existing.references + finding.references)
-        )
-
-        existing.metadata = {
-            **existing.metadata,
-            **finding.metadata,
-            "fingerprint": fingerprint,
-        }
+        # Merge other fields as needed
+        existing.cwe_ids = sorted(set(existing.cwe_ids + finding.cwe_ids))
+        existing.references = sorted(set(existing.references + finding.references))
 
         if not existing.description and finding.description:
             existing.description = finding.description
@@ -216,8 +210,7 @@ def merge_findings(findings: Iterable[Finding]) -> list[Finding]:
         if finding.last_seen > existing.last_seen:
             existing.last_seen = finding.last_seen
 
-    return sorted(merged.values(), key=lambda item: item.finding_id)
-
+    return sorted(merged.values(), key=lambda f: f.finding_id)
 
 def load_recon_files(root: Path) -> list[Path]:
     if root.is_file():

@@ -1,216 +1,105 @@
+from __future__ import annotations
+
+import argparse
+import sys
 from pathlib import Path
-import hashlib
-import json
+from typing import Sequence
 
-import typer
-import yaml
-
-from harness.evaluation.benchmark import (
-    evaluate_report,
-    load_benchmark_cases,
-)
-
-from harness.parsers.common import (
-    load_recon_files,
-    merge_findings,
-)
-from harness.parsers.subfinder import SubfinderParser
-from harness.parsers.nikto import NiktoParser
-from harness.models.finding import Evidence, Finding
-from harness.parsers.nmap_xml import NmapXMLParser
+from harness.providers.health_cli import check_provider_health
+from harness.providers.config import load_provider_configs
 
 
-app = typer.Typer(no_args_is_help=True)
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="vulstrip",
+        description="VulStrip CLI",
+    )
+
+    subparsers = parser.add_subparsers(
+        dest="command",
+        required=False,
+    )
+
+    # providers subcommand
+    _add_providers_subcommand(subparsers)
+
+    return parser
 
 
-def make_id(value: str) -> str:
-    return hashlib.sha256(value.encode()).hexdigest()[:16]
+def _add_providers_subcommand(subparsers: argparse._SubParsersAction) -> None:
+    providers_parser = subparsers.add_parser(
+        "providers",
+        help="Manage and diagnose AI providers.",
+    )
+
+    providers_sub = providers_parser.add_subparsers(
+        dest="providers_command",
+        required=False,
+    )
+
+    # providers check
+    check_parser = providers_sub.add_parser(
+        "check",
+        help="Check connectivity and capabilities for configured providers.",
+    )
+
+    check_parser.add_argument(
+        "--provider",
+        dest="provider_name",
+        help="Check only this provider (e.g., 'ollama'). If omitted, checks all enabled providers.",
+    )
+
+    check_parser.set_defaults(command="providers_check")
 
 
-def parse_json(path: Path, text: str) -> list[Finding]:
-    rows = json.loads(text)
+def _cmd_providers_check(args: argparse.Namespace) -> int:
+    # Use current working directory as repo root
+    root = Path.cwd()
+    providers_path = root / "providers.yaml"
 
-    if isinstance(rows, dict):
-        rows = rows.get("findings", rows.get("results", [rows]))
+    providers = load_provider_configs(providers_path)
 
-    findings: list[Finding] = []
+    all_results = []
 
-    for i, row in enumerate(rows):
-        if not isinstance(row, dict):
+    for provider in providers:
+        if not getattr(provider, "enabled", True):
             continue
 
-        asset = str(
-            row.get("asset")
-            or row.get("host")
-            or row.get("hostname")
-            or row.get("url")
-            or "unknown"
-        )
+        result = check_provider_health(provider)
+        all_results.append(result)
 
-        title = str(
-            row.get("title")
-            or row.get("name")
-            or row.get("issue")
-            or "Unclassified scanner observation"
-        )
+    # Print results in a simple table-like format
+    all_ok = True
 
-        raw_row = json.dumps(row, sort_keys=True)
+    for res in all_results:
+        # available is the health flag
+        is_healthy = getattr(res, "available", False)
+        if not is_healthy:
+            all_ok = False
 
-        evidence_id = f"e-{make_id(f'{path}:{i}:{raw_row}')}"
-        fingerprint = make_id(
-            f"{asset}|{row.get('port')}|{title}".lower()
-        )
+        status = "OK" if is_healthy else "FAIL"
+        provider_id = getattr(res, "provider_id", "unknown")
+        provider_type = getattr(res, "provider_type", "unknown")
+        message = getattr(res, "message", "")
 
-        findings.append(
-            Finding(
-                finding_id=f"f-{fingerprint}",
-                asset=asset,
-                asset_type=(
-                    "url"
-                    if asset.startswith(("http://", "https://"))
-                    else "unknown"
-                ),
-                port=row.get("port"),
-                protocol=row.get("protocol"),
-                service=row.get("service"),
-                title=title,
-                description=row.get("description"),
-                cve_ids=row.get("cve_ids", row.get("cves", [])),
-                tags=row.get("tags", []),
-                source_tools=["generic_json"],
-                fingerprint=fingerprint,
-                evidence=[
-                    Evidence(
-                        evidence_id=evidence_id,
-                        source_tool="generic_json",
-                        source_file=str(path),
-                        raw_text=raw_row,
-                        structured_data=row,
-                    )
-                ],
-            )
-        )
+        print(f"[{status}] {provider_id} ({provider_type})")
+        if message:
+            print(f"  {message}")
 
-    return findings
+    return 0 if all_ok else 1
 
 
-def parse_input(path: Path) -> list[Finding]:
-    content = path.read_text()
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
 
-    nmap_parser = NmapXMLParser()
-    if nmap_parser.can_parse(path, content):
-        return nmap_parser.parse(path, content)
+    if args.command == "providers_check":
+        return _cmd_providers_check(args)
 
-    nikto_parser = NiktoParser()
-    if nikto_parser.can_parse(path, content):
-        return nikto_parser.parse(path, content)
-    
-    subfinder_parser = SubfinderParser()
-    if subfinder_parser.can_parse(path, content):
-        return subfinder_parser.parse(path, content)
-
-    if path.suffix.lower() == ".json":
-        return parse_json(path, content)
-
-    return []
-
-
-@app.command()
-def ingest(
-    input: Path = typer.Option(..., "--input"),
-    scope: Path = typer.Option(..., "--scope"),
-    output: Path = typer.Option(..., "--output"),
-):
-    """Normalize JSON and Nmap XML reconnaissance into canonical findings."""
-
-    if not input.exists():
-        raise typer.BadParameter(f"Input path does not exist: {input}")
-
-    if not scope.exists():
-        raise typer.BadParameter(f"Scope file does not exist: {scope}")
-
-    scope_data = yaml.safe_load(scope.read_text()) or {}
-
-    if not scope_data.get("engagement_id"):
-        raise typer.BadParameter(
-            "scope.yaml must define engagement_id"
-        )
-
-    if not scope_data.get("authorized_assets"):
-        raise typer.BadParameter(
-            "scope.yaml must define authorized_assets"
-        )
-
-    if input.is_file():
-        paths = load_recon_files(input)
-    else:
-        paths = sorted(
-            path
-            for path in input.rglob("*")
-            if path.is_file()
-            and path.suffix.lower() in {".json", ".xml", ".txt", ".text", "log"}
-        )
-
-    if not paths:
-        raise typer.BadParameter(
-            f"No supported reconnaissance files found under : {input}"
-        )
-
-    all_findings: list[Finding] = []
-
-    for path in paths:
-        all_findings.extend(parse_input(path))
-    
-    findings = merge_findings(all_findings)
-
-    payload = {
-        "report_version": "1.0",
-        "run_id": make_id(str(output.resolve())),
-        "scope": scope_data,
-        "input_files": [str(path) for path in paths],
-        "findings": [
-            finding.model_dump(mode="json")
-            for finding in findings
-        ],
-    }
-
-    output.write_text(json.dumps(payload, indent=2))
-
-    typer.echo(
-        f"Wrote {len(findings)} findings to {output}"
-    )
-
-@app.command()
-def evaluate(
-        report: Path = typer.Option(..., "--report"),
-        benchmark: Path = typer.Option(..., "--benchmark"),
-        output: Path = typer.Option(..., "--output"),
-):
-    """Evaluate provider assessments against labeled benchmark cases."""
-
-    if not report.exists():
-        raise typer.BadParameter(
-            f"Report file does not exist: {report}"
-        )
-
-    if not benchmark.exists():
-        raise typer.BadParameter(
-            f"Benchmark file does not exist: {benchmark}"
-        )
-
-    report_data = json.loads(report.read_text())
-    benchmark_cases = load_benchmark_cases(benchmark)
-    evaluation = evaluate_report(report_data, benchmark_cases)
-
-    output.write_text(json.dumps(evaluation, indent=2))
-
-    typer.echo(
-        "Wrote evaluation for "
-        f"{evaluation['matched_case_count']} benchmark cases to {output}"
-    )
+    # If no known command is specified, print help
+    parser.print_help()
+    return 0
 
 
 if __name__ == "__main__":
-    app()
-
-## hehe
+    sys.exit(main())
